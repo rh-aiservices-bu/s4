@@ -52,14 +52,14 @@ spec:
               cpu: '2000m'
           readinessProbe:
             httpGet:
-              path: /api/disclaimer
+              path: /
               port: 5000
             initialDelaySeconds: 15
             periodSeconds: 10
             timeoutSeconds: 5
           livenessProbe:
             httpGet:
-              path: /api/disclaimer
+              path: /
               port: 5000
             initialDelaySeconds: 60
             periodSeconds: 30
