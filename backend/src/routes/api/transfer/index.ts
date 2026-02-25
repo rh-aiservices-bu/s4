@@ -1079,7 +1079,7 @@ export default async (fastify: FastifyInstance): Promise<void> => {
   /**
    * Audit logging hook - logs all requests after completion
    */
-  fastify.addHook('onResponse', (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
     if (request.user) {
       const body = request.body as Partial<TransferRequest & ConflictCheckRequest>;
       let resource = 'transfer:unknown';

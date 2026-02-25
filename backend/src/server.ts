@@ -50,7 +50,7 @@ const isHealthCheckRequest = (url: string | undefined, method: string): boolean 
 };
 
 // Custom request logging hook - filters out health check requests
-app.addHook('onRequest', (request, _reply, done) => {
+app.addHook('onRequest', async (request, _reply) => {
   const isHealthCheck = isHealthCheckRequest(request.url, request.method);
   if (!isHealthCheck || LOG_HEALTH_CHECKS) {
     request.log.info(
@@ -63,11 +63,10 @@ app.addHook('onRequest', (request, _reply, done) => {
       'incoming request',
     );
   }
-  done();
 });
 
 // Custom response logging hook - filters out health check requests
-app.addHook('onResponse', (request, reply, done) => {
+app.addHook('onResponse', async (request, reply) => {
   const isHealthCheck = isHealthCheckRequest(request.url, request.method);
   if (!isHealthCheck || LOG_HEALTH_CHECKS) {
     request.log.info(
@@ -78,11 +77,10 @@ app.addHook('onResponse', (request, reply, done) => {
       'request completed',
     );
   }
-  done();
 });
 
 // Debug: Log CORS headers on OPTIONS responses
-app.addHook('onSend', (request, reply, _payload, done) => {
+app.addHook('onSend', async (request, reply, _payload) => {
   if (request.method === 'OPTIONS') {
     request.log.info(
       {
@@ -96,7 +94,6 @@ app.addHook('onSend', (request, reply, _payload, done) => {
       'OPTIONS response headers',
     );
   }
-  done();
 });
 
 // Register CORS with secure configuration
