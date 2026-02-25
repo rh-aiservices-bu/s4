@@ -14,7 +14,7 @@
     "url": "https://github.com/rh-aiservices-bu/s4/issues"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "build": "run-p -l build:*",
