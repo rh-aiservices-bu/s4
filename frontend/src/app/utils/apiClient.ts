@@ -66,6 +66,20 @@ const createApiClient = (): AxiosInstance => {
     },
   );
 
+  // Request interceptor - strip Content-Type on DELETE with no body
+  // Fastify 5 rejects Content-Type: application/json with empty body (FST_ERR_CTP_EMPTY_JSON_BODY)
+  client.interceptors.request.use(
+    (requestConfig: InternalAxiosRequestConfig) => {
+      if (requestConfig.method === 'delete' && !requestConfig.data) {
+        delete requestConfig.headers['Content-Type'];
+      }
+      return requestConfig;
+    },
+    (error: AxiosError) => {
+      return Promise.reject(error);
+    },
+  );
+
   // Response interceptor - handle 401 responses
   client.interceptors.response.use(
     (response: AxiosResponse) => response,

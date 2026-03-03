@@ -18,7 +18,7 @@ npm run dev
 
 ## Prerequisites
 
-- **Node.js** 18+ and npm
+- **Node.js** 20+ and npm
 - **Git** for version control
 - **Podman/Docker** (optional, for testing container builds)
 - **kubectl** (optional, for Kubernetes deployments)

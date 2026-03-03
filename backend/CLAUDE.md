@@ -6,7 +6,7 @@
 
 **s4-backend** - Fastify-based API server with TypeScript, AWS S3 integration, and streaming file transfers. Connects to the bundled Ceph RGW S3 engine by default (localhost:7480).
 
-**Technology Stack**: Fastify 4, Node.js 18+, AWS SDK v3, TypeScript
+**Technology Stack**: Fastify 5, Node.js 20+, AWS SDK v3, TypeScript
 
 ### Port Architecture
 

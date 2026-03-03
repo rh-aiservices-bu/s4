@@ -7,7 +7,7 @@
 # Stage 1: Node.js Builder
 # Build the frontend and backend TypeScript applications
 # -----------------------------------------------------------------------------
-FROM registry.access.redhat.com/ubi9/nodejs-18 AS node-builder
+FROM registry.access.redhat.com/ubi9/nodejs-20 AS node-builder
 
 USER 0
 WORKDIR /tmp/src
@@ -42,7 +42,8 @@ LABEL name="s4" \
 
 USER root
 
-# Install Node.js 18, supervisor, s5cmd, and clean up in a single layer
+# Install Node.js, supervisor, s5cmd, and clean up in a single layer
+# Base image is CentOS Stream 10 which provides Node.js 22 via appstream
 RUN dnf update -y && \
     dnf install -y nodejs npm supervisor && \
     dnf clean all && \

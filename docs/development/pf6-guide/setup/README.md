@@ -21,7 +21,7 @@ Before starting any PatternFly React project, ensure the following requirements 
 
 #### Node.js & npm
 
-- **Requirement**: Node.js 18+ and npm 9+
+- **Requirement**: Node.js 20+ and npm 9+
 - **Verification**: Run `node --version && npm --version`
 - **Installation**: Download from [https://nodejs.org/](https://nodejs.org/)
 
@@ -76,7 +76,7 @@ Before starting any PatternFly React project, ensure the following requirements 
 
 ## Quick Setup Checklist
 
-- [ ] Node.js 18+ installed
+- [ ] Node.js 20+ installed
 - [ ] npm 9+ available
 - [ ] Vite configuration ready
 - [ ] PatternFly 6 packages installed
