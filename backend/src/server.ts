@@ -112,6 +112,7 @@ app.register(fastifyCookie, {
 
 // Add security headers via Helmet
 app.register(helmet, {
+  strictTransportSecurity: false, // S4 runs behind a reverse proxy/ingress that handles TLS
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
