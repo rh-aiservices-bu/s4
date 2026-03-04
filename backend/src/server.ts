@@ -111,6 +111,7 @@ app.register(fastifyCookie, {
 app.register(helmet, {
   strictTransportSecurity: false, // S4 runs behind a reverse proxy/ingress that handles TLS
   contentSecurityPolicy: {
+    useDefaults: false,
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"], // PatternFly needs inline styles
