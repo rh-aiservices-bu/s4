@@ -1,6 +1,6 @@
 {
   "name": "s4",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Super Simple Storage Service - Lightweight S3 solution with web UI",
   "author": "Red Hat AI Services BU",
   "license": "Apache-2.0",

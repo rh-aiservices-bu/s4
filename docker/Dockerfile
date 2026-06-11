@@ -31,7 +31,7 @@ RUN npm run build
 # Stage 2: Final Image
 # Ceph RGW daemon with Node.js runtime
 # -----------------------------------------------------------------------------
-FROM quay.io/rh-aiservices-bu/radosgw-posix:0.1.0
+FROM quay.io/rh-aiservices-bu/radosgw-posix:0.1.1
 
 LABEL name="s4" \
       summary="S4 - Super Simple Storage Service" \
