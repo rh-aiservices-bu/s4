@@ -1,0 +1,140 @@
+name: Build and Push
+
+# On every push to main (PR merge or direct push):
+#   1. Skip tests if a successful "Tests" check run already exists for the commit
+#      (deduplicates workflow re-runs and commits already tested by a PR run).
+#   2. Build and push the image only when image-impacting files changed
+#      (docker/, backend/, frontend/, root package manifests, .dockerignore).
+#   3. Tag the image with the short commit SHA and push to Quay.io
+#      using the QUAY_USERNAME / QUAY_TOKEN repository secrets.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  checks: read
+
+concurrency:
+  group: build-push-main
+  # Queue all runs so no push is replaced; each run diffs from the previous
+  # push, so skipping one would silently drop its image-impacting changes.
+  cancel-in-progress: false
+  queue: max
+
+env:
+  IMAGE_REGISTRY: quay.io
+  IMAGE_NAME: rh-aiservices-bu/s4
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check whether tests already passed for this commit
+        id: already-done
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          count=$(gh api "repos/${REPO}/commits/${SHA}/check-runs?filter=all" \
+            --paginate --slurp \
+            --jq '[.[].check_runs[] | select(.name == "Tests" and .status == "completed" and .conclusion == "success")] | length')
+          echo "successful_test_runs=${count}" >> "$GITHUB_OUTPUT"
+          echo "Successful 'Tests' check runs on ${SHA}: ${count}"
+
+      - name: Set up Node.js
+        if: steps.already-done.outputs.successful_test_runs == '0'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.already-done.outputs.successful_test_runs == '0'
+        run: npm install
+
+      - name: Backend (lint + type-check + tests)
+        if: steps.already-done.outputs.successful_test_runs == '0'
+        run: npm run test:backend
+
+      - name: Frontend (type-check + lint + tests)
+        if: steps.already-done.outputs.successful_test_runs == '0'
+        working-directory: frontend
+        run: npm run ci-checks
+
+  changes:
+    name: Detect image-impacting changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      image: ${{ steps.filter.outputs.image }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed files
+        id: filter
+        env:
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$BEFORE" ] || ! git cat-file -e "$BEFORE" 2>/dev/null; then
+            echo "image=true" >> "$GITHUB_OUTPUT"
+            echo "Base commit ${BEFORE:-<none>} unavailable (first push or force-push); building image."
+            exit 0
+          fi
+
+          changed="$(git diff --name-only "$BEFORE" "$SHA")"
+          echo "Changed files between $BEFORE and $SHA:"
+          echo "$changed"
+
+
+          if echo "$changed" | grep -Eq '^(docker/|backend/|frontend/|package\.json$|package-lock\.json$|\.dockerignore$)'; then
+            echo "image=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "image=false" >> "$GITHUB_OUTPUT"
+            echo "No image-impacting changes; skipping image build."
+          fi
+
+  build-push:
+    name: Build and push image
+    needs: [tests, changes]
+    if: needs.tests.result == 'success' && needs.changes.outputs.image == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Compute image tag from short SHA
+        id: tag
+        run: echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to Quay.io
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.IMAGE_REGISTRY }}
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

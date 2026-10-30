@@ -77,3 +77,6 @@ kubernetes/*.local.yaml
 
 # Claude
 .claude/
+
+# OMP
+.omp/profiles

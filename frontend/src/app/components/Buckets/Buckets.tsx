@@ -27,10 +27,10 @@ import {
   Popover,
   Skeleton,
   TextInput,
-  Tooltip,
   ToolbarContent,
   ToolbarGroup,
   ToolbarItem,
+  Tooltip,
 } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import {
