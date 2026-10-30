@@ -1,6 +1,6 @@
 # Container Architecture
 
-S4 packages both the Ceph RGW S3 engine and Node.js web application into a single container image using a multi-stage Docker build and supervisord for process management.
+S4 packages both the Ceph RGW S3 engine and Node.js web application into a single container image using a multi-stage Docker build. The entrypoint script supervises both processes, because the RGW base image ships no init system.
 
 ## Container Design Philosophy
 
@@ -29,12 +29,17 @@ S4 packages both the Ceph RGW S3 engine and Node.js web application into a singl
 - Build backend (TypeScript)
 - Keep build tools and dependencies separate from runtime
 
-**Stage 2: Final Image** (`quay.io/rh-aiservices-bu/radosgw-posix:0.0.7`)
+**Stage 2: Runtime Tooling** (`registry.access.redhat.com/ubi9/ubi`)
 
+- Download the official Node.js 22 build (self-contained, no extra shared libraries)
+- Download s5cmd (S3 debugging tool)
+- Exists only because the final image has no package manager access to these tools
+
+**Stage 3: Final Image** (`icr.io/cpopen/ibm-ceph/rgw-standalone-rhel10:v9.9.2-27322`)
+
+- Copy Node.js and s5cmd from the tooling stage
 - Copy built artifacts from builder
-- Install Node.js runtime
-- Install supervisord
-- Install s5cmd (S3 debugging tool)
+- Install production dependencies with npm
 - Configure and set permissions
 
 **Benefits**:
@@ -45,83 +50,61 @@ S4 packages both the Ceph RGW S3 engine and Node.js web application into a singl
 
 ## Base Image
 
-**Image**: `quay.io/rh-aiservices-bu/radosgw-posix:0.0.7`
+**Image**: `icr.io/cpopen/ibm-ceph/rgw-standalone-rhel10:v9.9.2-27322`
 
-**Based On**: Ceph daemon image (Reef release) with DBStore/SQLite support
+**Based On**: Red Hat UBI 10 minimal, with IBM Storage Ceph 9.9.2 `ceph-rgw-standalone`
 
 **Includes**:
 
-- Ceph RGW binaries
-- radosgw-admin CLI
-- SQLite libraries
-- Fedora-based operating system
+- `rgw-standalone` daemon and `rgw-standalone-admin` CLI (Ceph Tentacle 20.2.2)
+- POSIX backend (`rgw backend store = posix`) with LMDB/SQLite metadata
+- SQLite, LMDB, Arrow and other Ceph runtime libraries
+- Bash, Python 3.12 and curl
 
-**Why Custom Base?**:
+**Does not include**:
 
-- Official Ceph images require full cluster (mon, mgr, osd)
-- S4 needs lightweight standalone RGW with SQLite backend
-- Custom image provides RGW configured for DBStore
+- Node.js or npm (installed from the tooling stage)
+- An init/supervision system (`supervisord` is unavailable — no EPEL, no usable RHEL subscription repos)
+- `tar` (only needed at build time, in the tooling stage)
 
-## Process Management (Supervisord)
+**Why this base?**:
 
-### Configuration
+- Official Ceph images require a full cluster (mon, mgr, osd)
+- S4 needs a lightweight standalone RGW with a local POSIX/SQLite backend
+- Vendor-supported standalone gateway image, multi-arch (amd64, arm64, ppc64le, s390x)
 
-**File**: `docker/supervisord.conf`
+## Process Supervision (Entrypoint)
 
-```ini
-[supervisord]
-nodaemon=true
-logfile=/var/log/supervisord.log
-pidfile=/var/run/supervisord.pid
-loglevel=info
+The base image has no init system, so `docker/entrypoint.sh` supervises both
+processes itself. It stays in the foreground as PID 1 and runs each service in a
+restart loop.
 
-[program:rgw]
-command=/usr/bin/radosgw ...
-priority=10
-autostart=true
-autorestart=true
-stdout_logfile=/dev/stdout
-stderr_logfile=/dev/stderr
+### Startup Order
 
-[program:nodejs]
-command=node /opt/app-root/bin/s4/backend/dist/server.js
-priority=20
-autostart=true
-autorestart=true
-stdout_logfile=/dev/stdout
-stderr_logfile=/dev/stderr
-```
+1. **entrypoint.sh** starts (PID 1)
+2. Directories are created, the S3 admin user is provisioned
+3. **rgw-standalone** starts - S3 API on port 7480
+4. **node** starts - Web UI on port 5000
 
-### Process Startup Order
+**Why this order?**: the user must exist before RGW serves requests, and the
+Node.js backend talks to RGW at `localhost:7480`.
 
-1. **supervisord** starts (PID 1)
-2. **rgw** starts (priority 10) - S3 API on port 7480
-3. **nodejs** starts (priority 20) - Web UI on port 5000
+### Restart Policy
 
-**Why this order?**:
+Both services are restarted with a 2-second delay when they exit non-zero.
+After `S4_MAX_RESTARTS` (default `3`) consecutive failures the supervisor gives
+up and the entrypoint exits non-zero, so the orchestrator restarts the whole
+container instead of leaving it half-up.
 
-- Node.js backend connects to RGW on startup
-- RGW must be ready before backend starts
-- Startup delays (`startsecs`) handle timing
-
-### Process Restart Policy
-
-**RGW** (`autorestart=true`):
-
-- Restarts automatically on failure
-- Maximum 3 restart attempts (`startretries=3`)
-- 5-second grace period (`startsecs=5`)
-
-**Node.js** (`autorestart=true`):
-
-- Restarts automatically on failure
-- Maximum 3 restart attempts
-- 10-second grace period (longer than RGW)
+A service that exits cleanly (status 0) or is terminated by a signal stops the
+container: both processes are stopped and the entrypoint exits with that status.
 
 **Logging**:
 
 - All logs to stdout/stderr (container-friendly)
 - No log rotation needed (Kubernetes/Docker handles)
+- Entrypoint supervision messages are prefixed with `[entrypoint]`; RGW and
+  Node.js lines share the same stream
 
 ## Entrypoint Script
 
@@ -129,22 +112,24 @@ stderr_logfile=/dev/stderr
 
 ```bash
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Ensure data directories exist
-mkdir -p /var/lib/ceph/radosgw/{db,buckets,tmp}
-mkdir -p /var/lib/ceph/radosgw/db/rgw_posix_lmdbs
+mkdir -p /var/lib/ceph/radosgw/buckets \
+         /var/lib/ceph/radosgw/db/rgw_posix_lmdbs \
+         /var/run/ceph
 
 # Create initial RGW user (idempotent)
-radosgw-admin user create \
+rgw-standalone-admin -c /etc/ceph/ceph.conf user create \
   --uid s4admin \
   --display-name "S4 Admin" \
   --access-key "${AWS_ACCESS_KEY_ID:-s4admin}" \
   --secret-key "${AWS_SECRET_ACCESS_KEY:-s4secret}" \
   2>/dev/null || true
 
-# Start supervisord
-exec /usr/bin/supervisord -c /etc/supervisord.conf
+# Supervise both services in-process (see the full script for the loop)
+supervise rgw / /usr/bin/rgw-standalone ... --rgw-frontends "beast port=7480" &
+supervise nodejs /opt/app-root/bin/s4/backend /opt/node/bin/node dist/server.js &
 ```
 
 ### Responsibilities
@@ -161,9 +146,10 @@ exec /usr/bin/supervisord -c /etc/supervisord.conf
    - Uses environment variables for credentials
    - Idempotent (fails gracefully if user exists)
 
-3. **Process Delegation**:
-   - Execs supervisord (becomes PID 1)
-   - Proper signal handling for shutdown
+3. **Process Supervision**:
+   - Runs `rgw-standalone` and Node.js in restart loops (remains PID 1)
+   - Forwards SIGTERM/SIGINT to both services for graceful shutdown
+   - Exits non-zero when a service exhausts its restart budget
 
 ## Directory Structure
 
@@ -188,9 +174,10 @@ exec /usr/bin/supervisord -c /etc/supervisord.conf
 ```
 /var/lib/ceph/radosgw/
 ├── db/
-│   └── rgw_posix_lmdbs/         # SQLite databases
-├── buckets/                     # Object data (DBStore backend)
-└── tmp/                         # Temporary files
+│   └── rgw_posix_lmdbs/         # LMDB metadata partitions
+├── dbstore-config.db            # SQLite config store (realm/zone/period)
+├── dbstore-default_ns.db        # SQLite user/bucket metadata
+└── buckets/                     # Object data (POSIX backend)
 ```
 
 ### Volumes
@@ -207,47 +194,55 @@ exec /usr/bin/supervisord -c /etc/supervisord.conf
 
 ## Ceph RGW Configuration
 
-**File**: `docker/ceph.conf`
+**File**: `docker/config` (installed as `/etc/ceph/ceph.conf`)
 
 ```ini
-[global]
-fsid = 00000000-0000-0000-0000-000000000000
-osd_pool_default_size = 1
-osd_pool_default_min_size = 1
+[client]
+rgw backend store = posix
+rgw config store = dbstore
 
-[client.rgw]
-rgw_backend_store = dbstore
-rgw_d3n_l1_local_datacache_enabled = false
+rgw_posix_base_path = /var/lib/ceph/radosgw/buckets
+rgw_posix_database_root = /var/lib/ceph/radosgw/db
+
+admin socket = /var/lib/ceph/radosgw/ceph-$cluster-$name.asok
+
+rgw_enable_apis = s3, s3website, sts, sns, notifications
 rgw_enable_usage_log = false
-rgw_dns_name = localhost
-rgw_frontends = beast port=7480
+rgw_enable_ops_log = false
 ```
 
 ### Key Configuration
 
-- **Backend Store**: DBStore (SQLite-based, no RADOS needed)
-- **Frontends**: Beast HTTP server on port 7480
-- **Data Cache**: Disabled (not needed for POC use case)
-- **Usage Logging**: Disabled (performance optimization)
+- **Backend Store**: POSIX (LMDB/SQLite metadata, files on disk; no RADOS needed)
+- **Config Store**: SQLite (`dbstore`) under `rgw_posix_database_root`
+- **Frontends**: Beast HTTP server on port 7480 (passed on the command line)
+- **Usage/Ops Logging**: Disabled (performance optimization)
+
+The base image's own `ceph.conf` only sets the backend/config stores. S4 adds
+explicit POSIX paths so all state lives under the persisted volume.
 
 ### RGW Command
 
 ```bash
-/usr/bin/radosgw \
+/usr/bin/rgw-standalone \
+  -c /etc/ceph/ceph.conf \
   --cluster ceph \
   --default-log-to-stderr=true \
   --err-to-stderr=true \
   --default-log-to-file=false \
   --foreground \
   -n client.rgw \
-  --no-mon-config
+  --no-mon-config \
+  --rgw-frontends "beast port=7480"
 ```
 
 **Flags**:
 
-- `--foreground` - Run in foreground (supervisord manages)
+- `--foreground` - Run in foreground (entrypoint supervises)
 - `--default-log-to-stderr` - Logs to container stdout
 - `--no-mon-config` - Standalone mode (no Ceph monitor)
+- `--rgw-frontends` - Passed as a CLI argument so it takes precedence over any
+  value previously stored in the config store
 
 ## OpenShift Compatibility
 
@@ -296,17 +291,27 @@ FROM registry.access.redhat.com/ubi9/nodejs-20 AS node-builder
 # Build frontend and backend
 ```
 
-**Stage 2: Runtime Image**
+**Stage 2: Runtime Tooling**
 
 ```dockerfile
-FROM quay.io/rh-aiservices-bu/radosgw-posix:0.0.7
-# Install Node.js runtime (v22 via CentOS Stream 10 appstream) and supervisord
+FROM registry.access.redhat.com/ubi9/ubi AS runtime-tools
+# Download official Node.js 22 (linux-x64) and s5cmd; the final image has no
+# package manager access to either and does not ship tar.
+```
+
+**Stage 3: Runtime Image**
+
+```dockerfile
+FROM icr.io/cpopen/ibm-ceph/rgw-standalone-rhel10:v9.9.2-27322
+# Copy Node.js and s5cmd from the tooling stage
 # Copy built artifacts
 # Install production dependencies
 # Set permissions
 ```
 
-> **Note**: The builder uses Node.js 20 (UBI9), while the runtime installs Node.js 22 from CentOS Stream 10's appstream repository. The minimum supported version is Node.js 20+.
+> **Note**: The builder uses Node.js 20 (UBI9); the runtime ships Node.js 22
+> (official build) copied from the tooling stage. The minimum supported version
+> is Node.js 20+.
 
 ### Layer Optimization
 
@@ -397,10 +402,9 @@ podman run -d \
 1. Container starts → entrypoint.sh runs
 2. Directories initialized
 3. RGW user created (if first run)
-4. supervisord starts
-5. RGW starts (5 second startup time)
-6. Node.js starts (10 second startup time)
-7. Container ready
+4. RGW daemon and its supervisor start
+5. Node.js and its supervisor start
+6. Container ready
 
 ### Health Checks
 
@@ -426,8 +430,8 @@ readinessProbe:
 
 ### Shutdown Sequence
 
-1. SIGTERM received by supervisord (PID 1)
-2. supervisord sends SIGTERM to child processes
+1. SIGTERM received by entrypoint.sh (PID 1)
+2. Entrypoint signals both supervisors, which forward SIGTERM to their child
 3. Node.js graceful shutdown (closes connections)
 4. RGW graceful shutdown (flushes writes)
 5. Container exits
@@ -444,10 +448,10 @@ podman logs -f s4
 
 # Kubernetes logs
 kubectl logs -f deployment/s4
-
-# Specific process logs via exec
-kubectl exec -it pod/s4-xxx -- tail -f /var/log/supervisord.log
 ```
+
+Both processes log to the container's stdout/stderr, so there are no
+per-process log files to tail.
 
 ### Shell Access
 
@@ -468,19 +472,18 @@ kubectl exec -it deployment/s4 -- \
 
 # RGW admin commands
 kubectl exec -it deployment/s4 -- \
-  radosgw-admin user list
+  rgw-standalone-admin -c /etc/ceph/ceph.conf user list
 ```
 
 ### Process Status
 
 ```bash
-# Check supervisor status
+# Check that both processes are running
 kubectl exec -it deployment/s4 -- \
-  supervisorctl status
+  ps -ef
 
-# Restart specific process
-kubectl exec -it deployment/s4 -- \
-  supervisorctl restart nodejs
+# Follow the supervision messages (starts, restarts, give-ups)
+kubectl logs -f deployment/s4 | grep entrypoint
 ```
 
 ## Resource Requirements
@@ -508,15 +511,14 @@ resources:
 
 - **S3 Data**: User-defined (depends on objects)
 - **Local Storage**: User-defined (optional)
-- **Container Image**: ~800MB compressed
+- **Container Image**: dominated by the Ceph base image (~360 MiB compressed), plus ~180 MB of Node.js runtime
 
 ## Security Considerations
 
 ### Included Tools
 
 - **s5cmd** - S3 CLI tool (debugging/administration)
-- **radosgw-admin** - RGW administration
-- **supervisorctl** - Process management
+- **rgw-standalone-admin** - RGW administration (`user create`, `user list`, quotas)
 
 **Note**: These tools are admin-level. Restrict shell access in production.
 
@@ -549,7 +551,7 @@ resources:
 
 - SQLite database corruption (delete and restart)
 - Disk full (check volume space)
-- Logs: `podman logs s4 | grep radosgw`
+- Logs: `podman logs s4 | grep -i rgw`
 
 ### Node.js Crashes
 

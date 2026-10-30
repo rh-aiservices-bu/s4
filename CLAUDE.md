@@ -48,9 +48,9 @@ make helm-lint
 
 ### Container Architecture
 
-S4 runs as a single container with two processes managed by supervisord:
+S4 runs as a single container with two processes supervised by the container entrypoint (the base image ships no init system):
 
-- **Ceph RGW** (port 7480) - S3-compatible API using SQLite for persistence
+- **Ceph RGW** (port 7480) - S3-compatible API using a POSIX/SQLite backend
 - **Node.js backend** (port 5000) - Fastify server serving React frontend and API
 
 ### Directory Structure
@@ -79,9 +79,8 @@ s4/
 │       └── i18n/            # Internationalization
 ├── docker/                # Container configuration
 │   ├── Dockerfile         # Multi-stage build
-│   ├── ceph.conf          # RGW configuration
-│   ├── entrypoint.sh      # Startup script
-│   └── supervisord.conf   # Process management
+│   ├── config             # RGW configuration (ceph.conf)
+│   └── entrypoint.sh      # Startup script + process supervision
 ├── charts/s4/             # Helm chart (recommended for K8s deployment)
 │   ├── Chart.yaml         # Chart metadata
 │   ├── values.yaml        # Default configuration values
@@ -136,8 +135,8 @@ For implementation details (JWT flow, SSE ticket system, CORS, rate limiting), s
 
 - **Backend**: Fastify 5, Node.js 20+, AWS SDK v3, TypeScript
 - **Frontend**: React 18, PatternFly 6, React Router 7, TypeScript
-- **S3 Engine**: Ceph RGW with DBStore (SQLite) backend
-- **Container**: Based on `quay.io/rh-aiservices-bu/radosgw-posix` (Ceph RGW)
+- **S3 Engine**: Ceph RGW (`rgw-standalone`, POSIX backend with LMDB/SQLite metadata)
+- **Container**: Based on `icr.io/cpopen/ibm-ceph/rgw-standalone-rhel10` (IBM Storage Ceph)
 
 ## Detailed Documentation
 

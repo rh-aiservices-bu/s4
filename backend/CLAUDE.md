@@ -18,8 +18,8 @@
 
 **Production** (container):
 
-- Node.js Fastify listens directly on port 5000 (set by supervisord `PORT=5000`)
-- No proxy — supervisord starts Node.js directly, not behind a reverse proxy
+- Node.js Fastify listens directly on port 5000 (set by the container entrypoint's `PORT=5000`)
+- No proxy — the entrypoint starts Node.js directly, not behind a reverse proxy
 - Frontend built as static files served by Fastify from `frontend/dist/`
 - S3 API always on port 7480 (Ceph RGW, both dev and production)
 

@@ -1,6 +1,6 @@
 # =============================================================================
 # S4 - Super Simple Storage Service
-# Combined container with Ceph RGW (SQLite backend) + Node.js Web UI
+# Combined container with Ceph RGW (POSIX backend) + Node.js Web UI
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -28,10 +28,36 @@ COPY frontend/ ./frontend/
 RUN npm run build
 
 # -----------------------------------------------------------------------------
-# Stage 2: Final Image
-# Ceph RGW daemon with Node.js runtime
+# Stage 2: Runtime Tooling
+# The RGW base image is UBI 10 minimal: it ships neither Node.js nor supervisor
+# (EPEL is unavailable) and has no `tar`. Fetch Node.js and s5cmd here, in a
+# stage that has curl + tar, and copy only the resulting binaries.
 # -----------------------------------------------------------------------------
-FROM quay.io/rh-aiservices-bu/radosgw-posix:0.1.0
+FROM registry.access.redhat.com/ubi9/ubi:9.8 AS runtime-tools
+
+ARG NODE_VERSION=22.23.4
+ARG S5CMD_VERSION=2.3.0
+
+# amd64 only, mirroring the s5cmd asset below. Extend both URLs if other
+# architectures ever need to be built.
+# Official Node.js builds are self-contained (bundled OpenSSL/ICU/libuv), so
+# they run on the minimal UBI 10 runtime without extra shared libraries.
+RUN curl -fsSL -o /tmp/node.tar.gz \
+        "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz" && \
+    tar -xzf /tmp/node.tar.gz -C /opt && \
+    mv "/opt/node-v${NODE_VERSION}-linux-x64" /opt/node && \
+    rm -rf /opt/node/include /opt/node/share /opt/node/CHANGELOG.md /opt/node/LICENSE /opt/node/README.md
+
+# Install s5cmd for S3 debugging/administration
+RUN curl -fsSL -o /tmp/s5cmd.tar.gz \
+        "https://github.com/peak/s5cmd/releases/download/v${S5CMD_VERSION}/s5cmd_${S5CMD_VERSION}_Linux-64bit.tar.gz" && \
+    tar -xzf /tmp/s5cmd.tar.gz -C /usr/local/bin s5cmd
+
+# -----------------------------------------------------------------------------
+# Stage 3: Final Image
+# IBM Storage Ceph Object Gateway (rgw-standalone) with Node.js runtime
+# -----------------------------------------------------------------------------
+FROM icr.io/cpopen/ibm-ceph/rgw-standalone-rhel10:v9.9.2-27322
 
 LABEL name="s4" \
       summary="S4 - Super Simple Storage Service" \
@@ -42,30 +68,35 @@ LABEL name="s4" \
 
 USER root
 
-# Install Node.js, supervisor, s5cmd, and clean up in a single layer
-# Base image is CentOS Stream 10 which provides Node.js 22 via appstream
-RUN dnf update -y && \
-    dnf install -y nodejs npm supervisor && \
-    dnf clean all && \
-    rm -rf /var/cache/dnf && \
-    # Install s5cmd for S3 debugging/administration
-    curl -LO https://github.com/peak/s5cmd/releases/download/v2.3.0/s5cmd_2.3.0_Linux-64bit.tar.gz && \
-    tar xzf s5cmd_2.3.0_Linux-64bit.tar.gz && \
-    mv s5cmd /usr/local/bin/ && \
-    rm -f s5cmd_2.3.0_Linux-64bit.tar.gz LICENSE
+# Node.js runtime (self-contained official build) and s5cmd from the tooling stage
+COPY --from=runtime-tools /opt/node /opt/node
+COPY --from=runtime-tools /usr/local/bin/s5cmd /usr/local/bin/s5cmd
 
-# Create application directories with OpenShift-compatible permissions
-RUN mkdir -p /opt/app-root/bin/s4/backend \
+# The base image defaults to its own data directories; S4 keeps all state under
+# /var/lib/ceph/radosgw so existing volumes keep their mount point.
+ENV PATH=/opt/node/bin:$PATH \
+    HOME=/opt/app-root/src \
+    RGW_POSIX_BASE_PATH=/var/lib/ceph/radosgw/buckets \
+    RGW_POSIX_DATABASE_ROOT=/var/lib/ceph/radosgw/db
+
+# Create the runtime user and application directories with OpenShift-compatible
+# permissions. The base image only declares its own `ceph` user, but tools that
+# resolve the current UID expect a passwd entry.
+RUN useradd --uid 1001 --gid 0 --home-dir /opt/app-root/src \
+            --no-create-home --shell /usr/sbin/nologin default && \
+    mkdir -p /opt/app-root/bin/s4/backend \
              /opt/app-root/bin/s4/frontend \
              /opt/app-root/src/data \
-             /var/lib/ceph/radosgw/{db,buckets,tmp} && \
-    chown -R 1001:0 /opt/app-root /var/lib/ceph && \
-    chmod -R g+rwX /opt/app-root /var/lib/ceph
+             /var/lib/ceph/radosgw/buckets \
+             /var/lib/ceph/radosgw/db \
+             /var/lib/ceph/radosgw/db/rgw_posix_lmdbs \
+             /var/run/ceph && \
+    chown -R 1001:0 /opt/app-root /var/lib/ceph /var/run/ceph && \
+    chmod -R g+rwX /opt/app-root /var/lib/ceph /var/run/ceph
 
 # Copy configuration files (rarely change, good for caching)
 COPY docker/config /etc/ceph/ceph.conf
-COPY docker/supervisord.conf /etc/supervisord.conf
-COPY docker/entrypoint.sh /opt/ceph-container/bin/entrypoint.sh
+COPY docker/entrypoint.sh /usr/local/bin/s4-entrypoint.sh
 
 # Copy built backend from builder stage
 COPY --from=node-builder --chown=1001:0 /tmp/src/backend/package*.json /opt/app-root/bin/s4/backend/
@@ -78,12 +109,10 @@ COPY --from=node-builder --chown=1001:0 /tmp/src/frontend/dist /opt/app-root/bin
 WORKDIR /opt/app-root/bin/s4/backend
 RUN npm install --omit=dev && \
     npm cache clean --force && \
-    # Set permissions for config files and directories
-    chown 1001:0 /etc/ceph/ceph.conf /etc/supervisord.conf /opt/ceph-container/bin/entrypoint.sh && \
-    chmod g+rw /etc/ceph/ceph.conf /etc/supervisord.conf && \
-    chmod +x /opt/ceph-container/bin/entrypoint.sh && \
-    chown -R 1001:0 /var/log /var/run && \
-    chmod -R g+rwX /var/log /var/run
+    # Set permissions for config and entrypoint
+    chown 1001:0 /etc/ceph/ceph.conf /usr/local/bin/s4-entrypoint.sh && \
+    chmod g+rw /etc/ceph/ceph.conf && \
+    chmod +x /usr/local/bin/s4-entrypoint.sh
 
 # Expose ports
 # 7480 - Ceph RGW S3 API
@@ -106,4 +135,4 @@ WORKDIR /opt/app-root/src
 USER 1001
 
 # Use custom entrypoint
-ENTRYPOINT ["/opt/ceph-container/bin/entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/s4-entrypoint.sh"]

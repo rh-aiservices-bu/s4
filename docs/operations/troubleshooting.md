@@ -311,7 +311,7 @@ kubectl rollout restart deployment/s4
 curl -v http://localhost:7480/
 
 # Check RGW logs
-kubectl exec <s4-pod> -- cat /var/log/supervisor/radosgw.log
+kubectl logs <s4-pod> | grep -i rgw
 
 # Test with AWS CLI
 aws s3 ls --endpoint-url http://localhost:7480
@@ -323,13 +323,13 @@ aws s3 ls --endpoint-url http://localhost:7480
 
 ```bash
 # Check RGW process
-kubectl exec <s4-pod> -- ps aux | grep radosgw
+kubectl exec <s4-pod> -- ps -ef | grep rgw-standalone
 
-# Check supervisord status
-kubectl exec <s4-pod> -- supervisorctl status
+# Check supervision messages (restarts, give-ups)
+kubectl logs <s4-pod> | grep entrypoint
 
-# If stopped, restart
-kubectl exec <s4-pod> -- supervisorctl restart radosgw
+# If the entrypoint gave up, restart the pod
+kubectl delete pod <s4-pod>
 ```
 
 2. **Incorrect credentials**:
@@ -729,8 +729,8 @@ kubectl exec -it <s4-pod> -- /bin/bash
 # Check processes
 kubectl exec <s4-pod> -- ps aux
 
-# Copy files from pod
-kubectl cp <s4-pod>:/var/log/supervisor/radosgw.log ./rgw.log
+# Save container logs
+kubectl logs <s4-pod> > s4.log
 
 # Port forward for debugging
 kubectl port-forward <s4-pod> 5000:5000 7480:7480

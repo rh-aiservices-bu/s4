@@ -78,14 +78,14 @@ See [Backend Architecture](backend.md) for details.
 
 ### 3. S3 Storage Engine (Port 7480)
 
-**Technology**: Ceph RGW with DBStore (SQLite) backend
+**Technology**: Ceph RGW (`rgw-standalone`) with POSIX backend
 
 **Responsibilities**:
 
 - S3-compatible API (AWS S3 protocol)
 - Object storage and retrieval
 - Bucket management
-- Metadata storage in SQLite
+- Metadata storage in LMDB/SQLite under `/var/lib/ceph/radosgw/db`
 
 **Key Features**:
 
@@ -189,9 +189,8 @@ s4/
 │
 ├── docker/                # Container configuration
 │   ├── Dockerfile         # Multi-stage build
-│   ├── ceph.conf          # RGW configuration
-│   ├── entrypoint.sh      # Startup script
-│   └── supervisord.conf   # Process management
+│   ├── config             # RGW configuration (ceph.conf)
+│   └── entrypoint.sh      # Startup script + process supervision
 │
 └── kubernetes/            # K8s deployment manifests
     ├── s4-deployment.yaml
@@ -228,14 +227,14 @@ s4/
 
 ### Storage Engine
 
-- **S3 Engine**: Ceph RGW (Reef release)
-- **Backend**: DBStore with SQLite
-- **Base Image**: `quay.io/ceph/daemon`
+- **S3 Engine**: Ceph RGW (Tentacle 20.2.2, via IBM Storage Ceph 9.9.2)
+- **Backend**: POSIX store (LMDB/SQLite metadata, object files on disk)
+- **Base Image**: `icr.io/cpopen/ibm-ceph/rgw-standalone-rhel10`
 
 ### Container
 
-- **Process Manager**: Supervisord
-- **Base Image**: `quay.io/ceph/daemon` (Fedora-based)
+- **Process Manager**: entrypoint script (restart loops, signal forwarding)
+- **Base Image**: `icr.io/cpopen/ibm-ceph/rgw-standalone-rhel10` (UBI 10 minimal)
 - **Build**: Multi-stage Docker build
 
 ## Key Design Decisions
@@ -272,9 +271,9 @@ s4/
 - Coupled lifecycle
 - Not cloud-native best practice (but acceptable for use case)
 
-### 3. SQLite for S3 Metadata
+### 3. Local POSIX Backend for S3 Metadata
 
-**Decision**: Use Ceph RGW with DBStore (SQLite) instead of full Ceph cluster.
+**Decision**: Use Ceph RGW's POSIX backend (LMDB/SQLite) instead of a full Ceph cluster.
 
 **Rationale**:
 
