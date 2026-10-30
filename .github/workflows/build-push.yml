@@ -1,15 +1,20 @@
 name: Build and Push
 
-# On every push to main (PR merge or direct push):
+# On every push to main (PR merge or direct push), or manual dispatch:
 #   1. Skip tests if a successful "Tests" check run already exists for the commit
 #      (deduplicates workflow re-runs and commits already tested by a PR run).
 #   2. Build and push the image only when image-impacting files changed
 #      (docker/, backend/, frontend/, root package manifests, .dockerignore).
 #   3. Tag the image with the short commit SHA and push to Quay.io
 #      using the QUAY_USERNAME / QUAY_TOKEN repository secrets.
+#
+# Manual dispatch ignores the change detection and always builds the current
+# tip of main (escape hatch when the diff window missed a change).
 
 on:
   push:
+    branches: [main]
+  workflow_dispatch:
     branches: [main]
 
 permissions:
@@ -43,9 +48,8 @@ jobs:
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
         run: |
-          count=$(gh api "repos/${REPO}/commits/${SHA}/check-runs?filter=all" \
-            --paginate --slurp \
-            --jq '[.[].check_runs[] | select(.name == "Tests" and .status == "completed" and .conclusion == "success")] | length')
+          count=$(gh api "repos/${REPO}/commits/${SHA}/check-runs?filter=all&per_page=100" \
+            --paginate --slurp | jq '[.[].check_runs[] | select(.name == "Tests" and .status == "completed" and .conclusion == "success")] | length')
           echo "successful_test_runs=${count}" >> "$GITHUB_OUTPUT"
           echo "Successful 'Tests' check runs on ${SHA}: ${count}"
 
