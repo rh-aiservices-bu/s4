@@ -128,7 +128,9 @@ jobs:
         with:
           registry: ${{ env.IMAGE_REGISTRY }}
           username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_TOKEN }}
+          # Repo currently stores the Quay token as QUAY_PASSWORD; QUAY_TOKEN
+          # is accepted as a fallback name.
+          password: ${{ secrets.QUAY_TOKEN || secrets.QUAY_PASSWORD }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
