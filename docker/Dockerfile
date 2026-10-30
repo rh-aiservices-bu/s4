@@ -49,10 +49,10 @@ RUN dnf update -y && \
     dnf clean all && \
     rm -rf /var/cache/dnf && \
     # Install s5cmd for S3 debugging/administration
-    curl -LO https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz && \
-    tar xzf s5cmd_2.2.2_Linux-64bit.tar.gz && \
+    curl -LO https://github.com/peak/s5cmd/releases/download/v2.3.0/s5cmd_2.3.0_Linux-64bit.tar.gz && \
+    tar xzf s5cmd_2.3.0_Linux-64bit.tar.gz && \
     mv s5cmd /usr/local/bin/ && \
-    rm -f s5cmd_2.2.2_Linux-64bit.tar.gz LICENSE
+    rm -f s5cmd_2.3.0_Linux-64bit.tar.gz LICENSE
 
 # Create application directories with OpenShift-compatible permissions
 RUN mkdir -p /opt/app-root/bin/s4/backend \
