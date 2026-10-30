@@ -133,7 +133,7 @@ For implementation details (JWT flow, SSE ticket system, CORS, rate limiting), s
 
 ## Technology Stack
 
-- **Backend**: Fastify 5, Node.js 20+, AWS SDK v3, TypeScript
+- **Backend**: Fastify 5, Node.js 22.15+, AWS SDK v3, TypeScript
 - **Frontend**: React 18, PatternFly 6, React Router 7, TypeScript
 - **S3 Engine**: Ceph RGW (`rgw-standalone`, POSIX backend with LMDB/SQLite metadata)
 - **Container**: Based on `icr.io/cpopen/ibm-ceph/rgw-standalone-rhel10` (IBM Storage Ceph)

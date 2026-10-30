@@ -1,0 +1,62 @@
+version: 2
+
+# Dependabot version updates for every lockfile/manifest in the repository.
+# Security updates are opened independently of this file (see
+# docs/security/vulnerability-management.md); this configuration makes sure
+# routine minor/patch bumps also arrive as PRs instead of going stale silently.
+updates:
+  # Root workspace (build/dev tooling for both apps)
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      root-minor-patch:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
+
+  # Backend API
+  - package-ecosystem: npm
+    directory: "/backend"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      backend-minor-patch:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
+
+  # Frontend web UI
+  - package-ecosystem: npm
+    directory: "/frontend"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      frontend-minor-patch:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
+
+  # Container base images (RGW base, UBI builder/tooling stages)
+  - package-ecosystem: docker
+    directory: "/docker"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+
+  # GitHub Actions used by CI
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      actions-minor-patch:
+        patterns: ['*']
+        update-types: ['minor', 'patch']

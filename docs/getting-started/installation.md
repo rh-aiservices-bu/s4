@@ -210,7 +210,7 @@ For detailed OpenShift deployment, see [Deployment → OpenShift](../deployment/
 
 ### Prerequisites
 
-- Node.js 20+ and npm
+- Node.js 22.15+ and npm
 - Make
 - Container runtime (Podman/Docker)
 

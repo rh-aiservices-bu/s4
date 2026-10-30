@@ -1,13 +1,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { LOG_DIR, NB_PREFIX } from './utils/constants';
-import fastifyStatic, { SetHeadersResponse } from '@fastify/static';
+import fastifyStatic from '@fastify/static';
 import fastifyAutoload from '@fastify/autoload';
 import fastifySensible from '@fastify/sensible';
 import fastifyWebsocket from '@fastify/websocket';
 import fastifyAccepts from '@fastify/accepts';
 import { FastifySSEPlugin } from 'fastify-sse-v2';
 import { FastifyInstance } from 'fastify/types/instance';
+import type { FastifyReply } from 'fastify';
 import { authenticateUser, isPublicRoute } from './plugins/auth';
 import 'dotenv/config';
 
@@ -142,17 +143,17 @@ export const initializeApp = async (fastify: FastifyInstance, opts: any): Promis
     root: path.join(__dirname, '../../frontend/dist'),
     wildcard: false,
     index: false, // Disable automatic index.html serving
-    setHeaders: (res: SetHeadersResponse, filePath: string, _stat: fs.Stats) => {
+    setHeaders: (res: FastifyReply, filePath: string, _stat: fs.Stats) => {
       // Explicitly set MIME types for font files to ensure proper decoding
       // This is critical in container environments where MIME type mappings may differ
       if (filePath.endsWith('.woff2')) {
-        res.setHeader('Content-Type', 'font/woff2');
+        res.header('Content-Type', 'font/woff2');
       } else if (filePath.endsWith('.woff')) {
-        res.setHeader('Content-Type', 'font/woff');
+        res.header('Content-Type', 'font/woff');
       } else if (filePath.endsWith('.ttf')) {
-        res.setHeader('Content-Type', 'font/ttf');
+        res.header('Content-Type', 'font/ttf');
       } else if (filePath.endsWith('.eot')) {
-        res.setHeader('Content-Type', 'application/vnd.ms-fontobject');
+        res.header('Content-Type', 'application/vnd.ms-fontobject');
       }
     },
   };

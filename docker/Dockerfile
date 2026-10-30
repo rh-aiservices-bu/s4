@@ -7,7 +7,7 @@
 # Stage 1: Node.js Builder
 # Build the frontend and backend TypeScript applications
 # -----------------------------------------------------------------------------
-FROM registry.access.redhat.com/ubi9/nodejs-20 AS node-builder
+FROM registry.access.redhat.com/ubi9/nodejs-22 AS node-builder
 
 USER 0
 WORKDIR /tmp/src

@@ -23,7 +23,7 @@ S4 packages both the Ceph RGW S3 engine and Node.js web application into a singl
 
 ### Multi-Stage Build
 
-**Stage 1: Node.js Builder** (`registry.access.redhat.com/ubi9/nodejs-20`)
+**Stage 1: Node.js Builder** (`registry.access.redhat.com/ubi9/nodejs-22`)
 
 - Build frontend (Webpack)
 - Build backend (TypeScript)
@@ -286,7 +286,7 @@ S4 runs with default `restricted` SCC:
 **Stage 1: Build Applications**
 
 ```dockerfile
-FROM registry.access.redhat.com/ubi9/nodejs-20 AS node-builder
+FROM registry.access.redhat.com/ubi9/nodejs-22 AS node-builder
 # Install dependencies
 # Build frontend and backend
 ```
@@ -309,9 +309,9 @@ FROM icr.io/cpopen/ibm-ceph/rgw-standalone-rhel10:v9.9.2-27322
 # Set permissions
 ```
 
-> **Note**: The builder uses Node.js 20 (UBI9); the runtime ships Node.js 22
+> **Note**: The builder uses Node.js 22 (UBI9); the runtime ships Node.js 22
 > (official build) copied from the tooling stage. The minimum supported version
-> is Node.js 20+.
+> is Node.js 22.15+.
 
 ### Layer Optimization
 

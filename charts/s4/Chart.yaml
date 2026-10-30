@@ -3,7 +3,7 @@ name: s4
 description: S4 (Super Simple Storage Service) - A lightweight S3-compatible storage solution
 type: application
 version: 0.1.0
-appVersion: "0.3.2"
+appVersion: "0.4.0"
 keywords:
   - s3
   - storage
