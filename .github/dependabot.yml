@@ -13,21 +13,19 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     groups:
-      root-minor-patch:
+      root-all:
         patterns: ['*']
-        update-types: ['minor', 'patch']
-
+        update-types: ['version-update:semver-major', 'version-update:semver-minor', 'version-update:semver-patch']
   # Backend API
   - package-ecosystem: npm
     directory: "/backend"
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 10
     groups:
-      backend-minor-patch:
+      backend-all:
         patterns: ['*']
-        update-types: ['minor', 'patch']
+        update-types: ['version-update:semver-major', 'version-update:semver-minor', 'version-update:semver-patch']
 
   # Frontend web UI
   - package-ecosystem: npm
@@ -37,9 +35,9 @@ updates:
       day: monday
     open-pull-requests-limit: 10
     groups:
-      frontend-minor-patch:
+      frontend-all:
         patterns: ['*']
-        update-types: ['minor', 'patch']
+        update-types: ['version-update:semver-major', 'version-update:semver-minor', 'version-update:semver-patch']
 
   # Container base images (RGW base, UBI builder/tooling stages)
   - package-ecosystem: docker
@@ -57,6 +55,6 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     groups:
-      actions-minor-patch:
+      actions-all:
         patterns: ['*']
-        update-types: ['minor', 'patch']
+        update-types: ['version-update:semver-major', 'version-update:semver-minor', 'version-update:semver-patch']

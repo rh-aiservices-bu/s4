@@ -39,7 +39,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Check whether tests already passed for this commit
         id: already-done
@@ -55,7 +55,7 @@ jobs:
 
       - name: Set up Node.js
         if: steps.already-done.outputs.successful_test_runs == '0'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -133,10 +133,10 @@ jobs:
           password: ${{ secrets.QUAY_TOKEN || secrets.QUAY_PASSWORD }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and push image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/Dockerfile
