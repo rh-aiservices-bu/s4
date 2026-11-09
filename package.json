@@ -51,7 +51,7 @@
   "dependencies": {
     "@aws-sdk/node-http-handler": "^3.374.0",
     "dotenv": "^16.5.0",
-    "dotenv-expand": "^12.0.2",
+    "dotenv-expand": "^1000.0.0",
     "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.6",
     "npm-run-all": "^4.1.5",
