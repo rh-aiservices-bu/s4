@@ -25,7 +25,7 @@ System design, components, and technical architecture.
 - **[Architecture Overview](architecture/README.md)** - High-level system design
 - **[Backend Architecture](architecture/backend.md)** - Fastify API server internals
 - **[Frontend Architecture](architecture/frontend.md)** - React application structure
-- **[Container Architecture](architecture/container.md)** - Supervisord and process management
+- **[Container Architecture](architecture/container.md)** - Base image, process supervision, and data layout
 
 ### [API Reference](api/)
 
@@ -80,6 +80,7 @@ Monitoring, troubleshooting, and operational guides.
 - **[Monitoring](operations/monitoring.md)** - Observability and monitoring
 - **[Troubleshooting](operations/troubleshooting.md)** - Common issues and solutions
 - **[Error Reference](operations/error-reference.md)** - Complete error message reference
+- **[Upgrading to 0.4](operations/migration-0.4.md)** - Breaking-change migration (base image, data reset)
 - **[FAQ](operations/faq.md)** - Frequently asked questions
 
 ## 🚀 Quick Links

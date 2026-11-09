@@ -609,6 +609,6 @@ See [Production Readiness](../deployment/production-readiness.md) for complete d
 
 - **[API Reference](../api/README.md)** - Complete API documentation
 - **[Frontend Architecture](frontend.md)** - React application structure
-- **[Container Architecture](container.md)** - Supervisord and process management
+- **[Container Architecture](container.md)** - Base image, process supervision, and data layout
 - **[Development Guide](../development/backend.md)** - Backend development workflow
 - **[Production Readiness](../deployment/production-readiness.md)** - Deployment checklist

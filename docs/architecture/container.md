@@ -179,6 +179,11 @@ supervise nodejs /opt/app-root/bin/s4/backend /opt/node/bin/node dist/server.js 
 └── buckets/                     # Object data (POSIX backend)
 ```
 
+The RGW uses the POSIX driver natively (`rgw backend store = posix`), so
+object data under `buckets/` is stored as plain files and is directly
+readable on the volume with ordinary filesystem tools — no RADOS layer.
+Metadata lives in LMDB/SQLite and must not be edited by hand.
+
 ### Volumes
 
 **Production Mounts**:

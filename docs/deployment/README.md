@@ -83,6 +83,11 @@ Authentication is optional — set both `UI_USERNAME` and `UI_PASSWORD` to enabl
 
 S4 requires one persistent volume (`/var/lib/ceph/radosgw`) for S3 data. Local filesystem browsing volumes are optional — see the [Quick Start Guide](../getting-started/README.md#storage-volumes) for details.
 
+> **Upgrading from 0.3.x?** That is a breaking change: the storage engine was
+> replaced (IBM `rgw-standalone` base image with the native POSIX driver) and
+> **existing data from a prior installation will be lost**. See
+> [Upgrading to 0.4](../operations/migration-0.4.md) before upgrading.
+
 ## Production Considerations
 
 Before deploying to production, review:
