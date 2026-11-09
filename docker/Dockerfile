@@ -30,16 +30,14 @@ RUN npm run build
 # -----------------------------------------------------------------------------
 # Stage 2: Runtime Tooling
 # The RGW base image is UBI 10 minimal: it ships neither Node.js nor supervisor
-# (EPEL is unavailable) and has no `tar`. Fetch Node.js and s5cmd here, in a
-# stage that has curl + tar, and copy only the resulting binaries.
+# (EPEL is unavailable) and has no `tar`. Fetch Node.js here, in a stage that
+# has curl + tar, and copy only the resulting binary.
 # -----------------------------------------------------------------------------
 FROM registry.access.redhat.com/ubi9/ubi:9.8 AS runtime-tools
 
 ARG NODE_VERSION=22.23.4
-ARG S5CMD_VERSION=2.3.0
 
-# amd64 only, mirroring the s5cmd asset below. Extend both URLs if other
-# architectures ever need to be built.
+# amd64 only. Extend the URL if other architectures ever need to be built.
 # Official Node.js builds are self-contained (bundled OpenSSL/ICU/libuv), so
 # they run on the minimal UBI 10 runtime without extra shared libraries.
 RUN curl -fsSL -o /tmp/node.tar.gz \
@@ -47,11 +45,6 @@ RUN curl -fsSL -o /tmp/node.tar.gz \
     tar -xzf /tmp/node.tar.gz -C /opt && \
     mv "/opt/node-v${NODE_VERSION}-linux-x64" /opt/node && \
     rm -rf /opt/node/include /opt/node/share /opt/node/CHANGELOG.md /opt/node/LICENSE /opt/node/README.md
-
-# Install s5cmd for S3 debugging/administration
-RUN curl -fsSL -o /tmp/s5cmd.tar.gz \
-        "https://github.com/peak/s5cmd/releases/download/v${S5CMD_VERSION}/s5cmd_${S5CMD_VERSION}_Linux-64bit.tar.gz" && \
-    tar -xzf /tmp/s5cmd.tar.gz -C /usr/local/bin s5cmd
 
 # -----------------------------------------------------------------------------
 # Stage 3: Final Image
@@ -68,9 +61,8 @@ LABEL name="s4" \
 
 USER root
 
-# Node.js runtime (self-contained official build) and s5cmd from the tooling stage
+# Node.js runtime (self-contained official build) from the tooling stage
 COPY --from=runtime-tools /opt/node /opt/node
-COPY --from=runtime-tools /usr/local/bin/s5cmd /usr/local/bin/s5cmd
 
 # The base image defaults to its own data directories; S4 keeps all state under
 # /var/lib/ceph/radosgw so existing volumes keep their mount point.
