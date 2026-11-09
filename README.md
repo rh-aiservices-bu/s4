@@ -38,8 +38,10 @@ aws s3 mb s3://my-bucket
 git clone https://github.com/rh-aiservices-bu/s4.git
 cd s4
 
-# Install with Helm
-helm install s4 ./charts/s4 --namespace s4 --create-namespace
+# Install with Helm (UI authentication is required by default)
+helm install s4 ./charts/s4 --namespace s4 --create-namespace \
+  --set auth.username=admin \
+  --set auth.password=your-secure-password
 
 # Access the web UI (OpenShift - route is created automatically)
 oc get route s4 -n s4 -o jsonpath='{.spec.host}'
