@@ -31,6 +31,13 @@ export AWS_ENDPOINT_URL=http://localhost:7480
 aws s3 mb s3://my-bucket
 ```
 
+> **⚠ Upgrading from 0.3.x or earlier?** S4 0.4 switched to a new storage
+> engine (IBM `rgw-standalone` base image with the native Ceph POSIX driver).
+> **Existing data from a prior installation will be lost** — buckets, objects,
+> users and configuration are not migrated. Back up your data, then undeploy
+> the old release (including its data volume) before installing 0.4. See the
+> [migration guide](docs/operations/migration-0.4.md).
+
 ## Quick Start (OpenShift/Kubernetes)
 
 ```bash
