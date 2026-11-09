@@ -32,12 +32,11 @@ S4 packages both the Ceph RGW S3 engine and Node.js web application into a singl
 **Stage 2: Runtime Tooling** (`registry.access.redhat.com/ubi9/ubi`)
 
 - Download the official Node.js 22 build (self-contained, no extra shared libraries)
-- Download s5cmd (S3 debugging tool)
-- Exists only because the final image has no package manager access to these tools
+- Exists only because the final image has no package manager access to Node.js
 
 **Stage 3: Final Image** (`icr.io/cpopen/ibm-ceph/rgw-standalone-rhel10:v9.9.2-27322`)
 
-- Copy Node.js and s5cmd from the tooling stage
+- Copy Node.js from the tooling stage
 - Copy built artifacts from builder
 - Install production dependencies with npm
 - Configure and set permissions
@@ -295,15 +294,16 @@ FROM registry.access.redhat.com/ubi9/nodejs-22 AS node-builder
 
 ```dockerfile
 FROM registry.access.redhat.com/ubi9/ubi AS runtime-tools
-# Download official Node.js 22 (linux-x64) and s5cmd; the final image has no
-# package manager access to either and does not ship tar.
+# Download official Node.js 22 (linux-x64); the final image has no package
+# manager access to it and does not ship tar.
+# Copy Node.js from the tooling stage
 ```
 
 **Stage 3: Runtime Image**
 
 ```dockerfile
 FROM icr.io/cpopen/ibm-ceph/rgw-standalone-rhel10:v9.9.2-27322
-# Copy Node.js and s5cmd from the tooling stage
+# Copy Node.js from the tooling stage
 # Copy built artifacts
 # Install production dependencies
 # Set permissions
@@ -465,12 +465,32 @@ kubectl exec -it deployment/s4 -- bash
 
 ### S3 Debugging
 
-```bash
-# List buckets with s5cmd
-kubectl exec -it deployment/s4 -- \
-  s5cmd --endpoint-url http://localhost:7480 ls
+The image ships no S3 CLI (it keeps the attack surface small — run your S3
+tooling outside the pod, against the same endpoint the pod uses).
 
-# RGW admin commands
+**From a workstation or any pod with network access to S4** (port-forward with
+`kubectl port-forward deployment/s4 7480` for cluster-internal endpoints):
+
+```bash
+# MinIO mc
+mc alias set s4 http://localhost:7480 s4admin s4secret && mc ls s4
+
+# rclone
+rclone ls :s3,provider=Other,url=http://localhost:7480,access_key_id=s4admin,secret_access_key=s4secret:bucket
+```
+
+**In-pod quick checks** — the backend's `node_modules` already bundles the AWS
+SDK, so no extra install is needed:
+
+```bash
+kubectl exec -it deployment/s4 -- node -e '
+const { S3Client, ListBucketsCommand } = require("@aws-sdk/client-s3");
+const s3 = new S3Client({ endpoint: "http://localhost:7480", region: "us-east-1",
+  credentials: { accessKeyId: "s4admin", secretAccessKey: "s4secret" } });
+s3.send(new ListBucketsCommand({})).then(r => console.log(r.Buckets));
+'
+
+# RGW admin commands (still available in-pod)
 kubectl exec -it deployment/s4 -- \
   rgw-standalone-admin -c /etc/ceph/ceph.conf user list
 ```
@@ -517,7 +537,6 @@ resources:
 
 ### Included Tools
 
-- **s5cmd** - S3 CLI tool (debugging/administration)
 - **rgw-standalone-admin** - RGW administration (`user create`, `user list`, quotas)
 
 **Note**: These tools are admin-level. Restrict shell access in production.
