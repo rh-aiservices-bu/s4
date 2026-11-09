@@ -57,7 +57,7 @@ jobs:
         if: steps.already-done.outputs.successful_test_runs == '0'
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
 
       - name: Install dependencies

@@ -15,7 +15,7 @@ This guide focuses on getting the PatternFly 6 React frontend running with Vite 
 
 ## Prerequisites
 
-- Node.js 20+ and npm 9+
+- Node.js 22.15+ and npm 9+
 - Project repository already cloned
 - Working from the project root directory
 

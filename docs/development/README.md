@@ -124,8 +124,7 @@ s4/
 │
 ├── docker/                # Container configuration
 │   ├── Dockerfile
-│   ├── entrypoint.sh
-│   └── supervisord.conf
+│   └── entrypoint.sh
 │
 ├── kubernetes/            # Kubernetes manifests
 └── docs/                  # Documentation

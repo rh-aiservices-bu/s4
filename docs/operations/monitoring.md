@@ -24,9 +24,10 @@ S4 produces logs via:
    - Authentication events
    - S3 operations
 
-2. **Process Logs** (Supervisord)
-   - RGW logs: `/var/log/supervisor/radosgw.log`
-   - Backend logs: `/var/log/supervisor/s4-backend.log`
+2. **Process Logs** (container stdout/stderr)
+   - RGW daemon output (`/usr/bin/rgw-standalone`)
+   - Node.js backend output
+   - Entrypoint supervision messages (`[entrypoint] started …`)
 
 ### Log Levels
 
@@ -48,9 +49,8 @@ podman logs -f s4
 # Last 100 lines
 podman logs --tail 100 s4
 
-# Specific process
-podman exec s4 cat /var/log/supervisor/s4-backend.log
-podman exec s4 cat /var/log/supervisor/radosgw.log
+# Only RGW output
+podman logs s4 | grep -i rgw
 ```
 
 **Kubernetes**:

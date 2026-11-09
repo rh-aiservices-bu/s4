@@ -6,7 +6,7 @@
 
 **s4-backend** - Fastify-based API server with TypeScript, AWS S3 integration, and streaming file transfers. Connects to the bundled Ceph RGW S3 engine by default (localhost:7480).
 
-**Technology Stack**: Fastify 5, Node.js 20+, AWS SDK v3, TypeScript
+**Technology Stack**: Fastify 5, Node.js 22.15+, AWS SDK v3, TypeScript
 
 ### Port Architecture
 
@@ -18,8 +18,8 @@
 
 **Production** (container):
 
-- Node.js Fastify listens directly on port 5000 (set by supervisord `PORT=5000`)
-- No proxy — supervisord starts Node.js directly, not behind a reverse proxy
+- Node.js Fastify listens directly on port 5000 (set by the container entrypoint's `PORT=5000`)
+- No proxy — the entrypoint starts Node.js directly, not behind a reverse proxy
 - Frontend built as static files served by Fastify from `frontend/dist/`
 - S3 API always on port 7480 (Ceph RGW, both dev and production)
 

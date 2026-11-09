@@ -9,7 +9,7 @@ The S4 backend is a Fastify 5 server with TypeScript, AWS S3 integration, and st
 **Technology Stack**:
 
 - Fastify 5.x
-- Node.js 20+
+- Node.js 22.15+
 - AWS SDK v3
 - TypeScript 5.x
 

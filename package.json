@@ -1,6 +1,6 @@
 {
   "name": "s4",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Super Simple Storage Service - Lightweight S3 solution with web UI",
   "author": "Red Hat AI Services BU",
   "license": "Apache-2.0",
@@ -14,7 +14,7 @@
     "url": "https://github.com/rh-aiservices-bu/s4/issues"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.15.0"
   },
   "scripts": {
     "build": "run-p -l build:*",
@@ -45,7 +45,8 @@
     "test:fix": "run-s test:fix-backend test:fix-frontend",
     "test:fix-backend": "cd ./backend && npm run test:fix",
     "test:fix-frontend": "cd ./frontend && npm run test:fix",
-    "version:sync": "node scripts/sync-version.js"
+    "version:sync": "node scripts/sync-version.js",
+    "audit": "npm audit --omit=dev --audit-level=high && cd backend && npm audit --omit=dev --audit-level=high && cd ../frontend && npm audit --omit=dev --audit-level=high"
   },
   "dependencies": {
     "@aws-sdk/node-http-handler": "^3.374.0",

@@ -61,7 +61,7 @@ temp/
 # Container builds (local)
 .container-*
 
-# Python (for supervisor)
+# Python
 __pycache__/
 *.py[cod]
 *$py.class

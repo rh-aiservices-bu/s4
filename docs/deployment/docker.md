@@ -75,11 +75,11 @@ podman logs -f s4
 
 # Last 100 lines
 podman logs --tail 100 s4
-
-# Logs for specific process
-podman exec s4 cat /var/log/supervisor/radosgw.log
-podman exec s4 cat /var/log/supervisor/s4-backend.log
 ```
+
+Both processes (RGW and Node.js) log to the container's stdout/stderr; there are
+no per-process log files. Use `podman logs s4 | grep -i rgw` to isolate RGW
+output.
 
 ### Restart Container
 
@@ -638,7 +638,7 @@ podman run -d \
 curl http://localhost:7480/
 
 # Check RGW logs
-podman exec s4 cat /var/log/supervisor/radosgw.log
+podman logs s4 | grep -i rgw
 
 # Verify S3 credentials
 podman exec s4 env | grep AWS
@@ -648,7 +648,7 @@ podman exec s4 env | grep AWS
 
 ```bash
 # Check backend logs
-podman exec s4 cat /var/log/supervisor/s4-backend.log
+podman logs s4 | grep -i node
 
 # Check if backend is running
 podman exec s4 ps aux | grep node

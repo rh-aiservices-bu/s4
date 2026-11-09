@@ -15,7 +15,7 @@
  * @see https://github.com/suren-atoyan/monaco-loader#configure-the-loader-to-load-the-monaco-as-an-npm-package
  */
 import loader from '@monaco-editor/loader';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor';
 
 // Configure the loader to use our webpack-bundled Monaco instance
 // This prevents the loader from attempting to load Monaco from CDN

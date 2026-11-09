@@ -5,7 +5,7 @@ The S4 backend is a TypeScript-based Fastify application that provides a RESTful
 ## Technology Stack
 
 - **Framework**: Fastify 5 (high-performance Node.js web framework)
-- **Runtime**: Node.js 20+
+- **Runtime**: Node.js 22.15+
 - **Language**: TypeScript
 - **S3 Client**: AWS SDK v3
 - **Notifications**: Filesystem watching with webhook dispatch
