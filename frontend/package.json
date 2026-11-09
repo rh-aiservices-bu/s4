@@ -85,7 +85,7 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@mui/icons-material": "^5.15.0",
+    "@mui/icons-material": "^9.5.0",
     "@mui/material": "^5.14.20",
     "@patternfly/patternfly": "^6.2.3",
     "@patternfly/react-code-editor": "^6.2.2",
