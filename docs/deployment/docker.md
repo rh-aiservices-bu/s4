@@ -8,7 +8,7 @@ S4 is distributed as a single container image that includes:
 
 - Ceph RGW (S3-compatible API on port 7480)
 - Node.js backend + React frontend (Web UI on port 5000)
-- Supervisord for process management
+- Entrypoint-based process supervision (bounded restart policy)
 
 **Image**: `quay.io/rh-aiservices-bu/s4:latest`
 

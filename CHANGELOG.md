@@ -7,26 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.0] - 2026-10-30
+## [0.4.0] - 2026-11-09
+
+> **⚠ BREAKING CHANGE — data loss**: 0.4 uses a new storage engine
+> (IBM `rgw-standalone` base image with the native Ceph POSIX driver). Data
+> written by 0.3.x or earlier is **not readable** by this version: buckets,
+> objects, users and configuration from a prior installation will be lost on
+> upgrade. There is no in-place migration — back up your data, undeploy the
+> old release (including its data volume), and re-install/re-upload. See
+> [Upgrading to 0.4](docs/operations/migration-0.4.md).
 
 ### Changed
 
 - **Container base image**: RGW now runs from `icr.io/cpopen/ibm-ceph/rgw-standalone-rhel10:v9.9.2-27322`
   (IBM Storage Ceph 9.9.2 / Ceph Tentacle 20.2.2, UBI 10 minimal) instead of
   `quay.io/rh-aiservices-bu/radosgw-posix`. Binaries are renamed to
-  `rgw-standalone` / `rgw-standalone-admin`, and the POSIX backend replaces the
-  DBStore + POSIX filter combination.
-- **Process supervision**: the base image ships no init system (and no EPEL), so
-  `docker/entrypoint.sh` now supervises RGW and Node.js itself with a bounded
-  restart policy (`S4_MAX_RESTARTS`, default 3) and SIGTERM forwarding.
-  `docker/supervisord.conf` was removed.
-- **Node.js 22.15+ is required** (Node.js 20 is end-of-life). The builder stage,
-  CI and the bundled runtime are aligned on Node.js 22.
+  `rgw-standalone` / `rgw-standalone-admin`, and the POSIX backend replaces
+  the DBStore + POSIX filter combination.
+- **RGW now uses the POSIX driver natively** (`rgw backend store = posix`):
+  files inside the backend storage (`/var/lib/ceph/radosgw/buckets`) are
+  directly readable on the volume as plain files — no RADOS layer — which
+  makes inspection, backup and re-import with filesystem tools straightforward.
+- **Process supervision**: the base image ships no init system (and no EPEL),
+  so `docker/entrypoint.sh` now supervises RGW and Node.js itself with a
+  bounded restart policy (`S4_MAX_RESTARTS`, default 3) and SIGTERM
+  forwarding. `docker/supervisord.conf` was removed.
+- **Node.js 22.15+ is required** (Node.js 20 is end-of-life). The builder
+  stage, CI and the bundled runtime are aligned on Node.js 22.
 - `@fastify/static` 9 → 10; the `setHeaders` callback now receives a
   `FastifyReply`, and the code uses `reply.header(...)`.
 - Frontend build tooling: webpack 5.112, `copy-webpack-plugin` 14,
   `css-minimizer-webpack-plugin` 8, `webpack-dev-server` 6. The Monaco Editor
   import uses the package root to follow its new `exports` map.
+
+### Removed
+
+- **Bundled `s5cmd`** (#74): the debugging-only S3 CLI was dropped from the
+  image. Clair read Go buildinfo out of the static binary and attributed ~40
+  CVE findings to it (none reachable); all S3 operations use
+  `@aws-sdk/client-s3` + `@aws-sdk/lib-storage`, which ship as backend
+  dependencies regardless. Run S3 CLIs (mc, rclone) against the S4 endpoint
+  from outside the pod — see
+  [Container Architecture → S3 Debugging](docs/architecture/container.md#s3-debugging).
 
 ### Security
 
@@ -48,7 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - RGW user provisioning, S3 credentials and stored objects survive container
-  restarts with the new POSIX backend (verified against the pulled base image).
+  restarts with the new POSIX backend (verified against the pulled base
+  image).
 
 ## [0.3.2] - 2026-03-04
 
@@ -112,7 +135,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Helm quick start guide
 - Remove cloud-specific storage class references from deployment docs
 
-[Unreleased]: https://github.com/rh-aiservices-bu/s4/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/rh-aiservices-bu/s4/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/rh-aiservices-bu/s4/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/rh-aiservices-bu/s4/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/rh-aiservices-bu/s4/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/rh-aiservices-bu/s4/compare/v0.2.2...v0.3.0

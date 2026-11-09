@@ -93,7 +93,7 @@ See [Backend Architecture](backend.md) for details.
 - SQLite-backed (no external database required)
 - Single-node deployment
 - Compatible with AWS S3 CLI and SDKs
-- Based on [zgw](https://github.com/mmgaggle/zgw)
+- Upstream Ceph RGW codebase (IBM Storage Ceph `rgw-standalone` builds)
 
 **Limitations**:
 
@@ -103,13 +103,13 @@ See [Backend Architecture](backend.md) for details.
 
 ### 4. Process Manager
 
-**Technology**: Supervisord
+**Technology**: `docker/entrypoint.sh` supervision (bounded restart loop)
 
 **Responsibilities**:
 
 - Manages RGW and Node.js processes
-- Automatic process restart on failure
-- Centralized logging
+- Automatic process restart on failure (bounded by `S4_MAX_RESTARTS`)
+- SIGTERM forwarding for graceful shutdown
 
 See [Container Architecture](container.md) for details.
 
@@ -385,6 +385,6 @@ See [Security Architecture](../security/README.md) for details.
 
 - **[Backend Architecture](backend.md)** - Fastify API implementation details
 - **[Frontend Architecture](frontend.md)** - React application structure
-- **[Container Architecture](container.md)** - Supervisord and process management
+- **[Container Architecture](container.md)** - Base image, process supervision, and data layout
 - **[API Reference](../api/README.md)** - Complete API documentation
 - **[Deployment](../deployment/README.md)** - Deployment guides

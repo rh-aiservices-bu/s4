@@ -5,6 +5,7 @@ Operations documentation for monitoring, troubleshooting, and managing S4 in pro
 ## In This Section
 
 - **[Monitoring](monitoring.md)** - Observability, health checks, and metrics
+- **[Upgrading to 0.4](migration-0.4.md)** - Breaking-change migration from 0.3.x to 0.4+ (base image, data reset)
 - **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
 - **[Error Reference](error-reference.md)** - Complete error message reference with causes and resolutions
 - **[FAQ](faq.md)** - Frequently asked questions
