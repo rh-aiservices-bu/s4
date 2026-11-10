@@ -31,8 +31,19 @@ mkdir -p "$DATA_DIR/buckets" "$DATA_DIR/db/rgw_posix_lmdbs" /var/run/ceph
 # AccessKeyID" -> 403 InvalidAccessKeyId on every request). Drop the stale
 # table, recreate it with the expected columns, and restore the access-key row
 # (rgw never re-inserts it for an already-existing user).
-if [ -f "$DATA_DIR/db/userdb/dbstore-default_ns.db" ]; then
-  python3 - "$DATA_DIR/db/userdb/dbstore-default_ns.db" \
+#
+# The DB path depends on rgw_posix_userdb_dir: unset (S4 default) -> volume
+# root; set -> <dir>/dbstore-default_ns.db. Repair whichever exists.
+USERDB_CANDIDATES=("$DATA_DIR/dbstore-default_ns.db" "$DATA_DIR/db/userdb/dbstore-default_ns.db")
+USER_DB=""
+for candidate in "${USERDB_CANDIDATES[@]}"; do
+  if [ -f "$candidate" ]; then
+    USER_DB="$candidate"
+    break
+  fi
+done
+if [ -n "$USER_DB" ]; then
+  python3 - "$USER_DB" \
       "${AWS_ACCESS_KEY_ID:-s4admin}" <<'PYEOF' || true
 import sqlite3
 import sys

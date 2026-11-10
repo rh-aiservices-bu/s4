@@ -368,20 +368,30 @@ s3:list_buckets failed to prepare statement for Op(PrepareGetUser); Errmsg -no s
 s3:list_buckets In Process op Execute failed for fop(GetUser)
 ```
 
-**Cause**: the RGW user database on the data volume
-(`/var/lib/ceph/radosgw/db/userdb/dbstore-default_ns.db`) was created by an
-older rgw build that used a different schema for the access-key join table.
-rgw re-creates missing tables at startup but never alters existing ones, so
-the stale schema survives restarts and every user-by-access-key lookup fails.
+**Cause**: the RGW user database on the data volume (default path
+`/var/lib/ceph/radosgw/dbstore-default_ns.db`) was created by an older rgw
+build that used a different schema for the access-key join table. rgw
+re-creates missing tables at startup but never alters existing ones, so the
+stale schema survives restarts and every user-by-access-key lookup fails.
 The fix in `docker/entrypoint.sh` repairs this automatically on startup.
 
 **Immediate recovery** (one-time, on the running pod):
 
 ```bash
 oc rsh <s4-pod> python3 - <<'PYEOF'
+import os
 import sqlite3
 
-DB = "/var/lib/ceph/radosgw/db/userdb/dbstore-default_ns.db"
+# Default path (rgw_posix_userdb_dir unset). If your deployment sets
+# rgw_posix_userdb_dir, the DB is <dir>/dbstore-default_ns.db instead.
+for candidate in ("/var/lib/ceph/radosgw/dbstore-default_ns.db",
+                  "/var/lib/ceph/radosgw/db/userdb/dbstore-default_ns.db"):
+    if os.path.exists(candidate):
+        DB = candidate
+        break
+else:
+    raise SystemExit("user DB not found in either known location")
+
 ACCESS_KEY = "s4admin"  # your AWS_ACCESS_KEY_ID
 
 con = sqlite3.connect(DB)
@@ -395,7 +405,7 @@ if owner:
     cur.execute('INSERT INTO "" (AccessKeyID, UserID) VALUES (?, ?)',
                 (ACCESS_KEY, owner[0]))
 con.commit()
-print("access-key table:", list(cur.execute('SELECT * FROM ""')))
+print("repaired", DB, "access-key table:", list(cur.execute('SELECT * FROM ""')))
 con.close()
 PYEOF
 
