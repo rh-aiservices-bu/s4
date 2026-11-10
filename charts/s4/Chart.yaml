@@ -2,8 +2,8 @@ apiVersion: v2
 name: s4
 description: S4 (Super Simple Storage Service) - A lightweight S3-compatible storage solution
 type: application
-version: 0.4.0
-appVersion: "0.4.0"
+version: 0.4.1
+appVersion: "0.4.1"
 keywords:
   - s3
   - storage
