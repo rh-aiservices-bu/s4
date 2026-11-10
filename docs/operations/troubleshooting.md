@@ -354,6 +354,64 @@ kubectl get configmap s4-config -o yaml | grep AWS_S3_ENDPOINT
 curl -v https://s3.amazonaws.com/
 ```
 
+### S3 Credentials Rejected After Restart (InvalidAccessKeyId)
+
+**Symptoms**:
+
+- S3 worked before a cluster/pod restart; after it, every S3 request returns
+  `403 InvalidAccessKeyId`
+- The web UI loads but shows no buckets
+- RGW logs repeat:
+
+```text
+s3:list_buckets failed to prepare statement for Op(PrepareGetUser); Errmsg -no such column: AccessKeyID
+s3:list_buckets In Process op Execute failed for fop(GetUser)
+```
+
+**Cause**: the RGW user database on the data volume
+(`/var/lib/ceph/radosgw/db/userdb/dbstore-default_ns.db`) was created by an
+older rgw build that used a different schema for the access-key join table.
+rgw re-creates missing tables at startup but never alters existing ones, so
+the stale schema survives restarts and every user-by-access-key lookup fails.
+The fix in `docker/entrypoint.sh` repairs this automatically on startup.
+
+**Immediate recovery** (one-time, on the running pod):
+
+```bash
+oc rsh <s4-pod> python3 - <<'PYEOF'
+import sqlite3
+
+DB = "/var/lib/ceph/radosgw/db/userdb/dbstore-default_ns.db"
+ACCESS_KEY = "s4admin"  # your AWS_ACCESS_KEY_ID
+
+con = sqlite3.connect(DB)
+cur = con.cursor()
+cur.execute('DROP TABLE IF EXISTS ""')
+cur.execute('CREATE TABLE "" (AccessKeyID TEXT NOT NULL, '
+            "UserID TEXT NOT NULL, PRIMARY KEY (AccessKeyID))")
+owner = cur.execute("SELECT UserID FROM 'dbstore-default_ns_user_table' "
+                    "WHERE AccessKeys IS NOT NULL LIMIT 1").fetchone()
+if owner:
+    cur.execute('INSERT INTO "" (AccessKeyID, UserID) VALUES (?, ?)',
+                (ACCESS_KEY, owner[0]))
+con.commit()
+print("access-key table:", list(cur.execute('SELECT * FROM ""')))
+con.close()
+PYEOF
+
+# Then restart the pod so rgw reopens the repaired database:
+oc delete pod <s4-pod>
+```
+
+Bucket data is untouched; only the credential lookup table is repaired.
+
+**Verification**:
+
+```bash
+oc exec <s4-pod> -- curl -s http://localhost:7480/ -o /dev/null -w '%{http_code}\n'
+# 200; then log into the UI and confirm buckets are listed again.
+```
+
 ### Upload/Download Fails
 
 **Symptoms**:

@@ -24,6 +24,43 @@ MAX_RESTARTS=${S4_MAX_RESTARTS:-3}
 # Ensure data directories exist (PVC mount may override Dockerfile-created dirs)
 mkdir -p "$DATA_DIR/buckets" "$DATA_DIR/db/rgw_posix_lmdbs" /var/run/ceph
 
+# Repair the RGW user DB if the access-key join table exists with a stale
+# schema. Older rgw builds created that table with different columns; rgw only
+# CREATEs missing tables at startup and never alters existing ones, so a stale
+# schema permanently breaks S3 auth (PrepareGetUser: "no such column:
+# AccessKeyID" -> 403 InvalidAccessKeyId on every request). Drop the stale
+# table, recreate it with the expected columns, and restore the access-key row
+# (rgw never re-inserts it for an already-existing user).
+if [ -f "$DATA_DIR/db/userdb/dbstore-default_ns.db" ]; then
+  python3 - "$DATA_DIR/db/userdb/dbstore-default_ns.db" \
+      "${AWS_ACCESS_KEY_ID:-s4admin}" <<'PYEOF' || true
+import sqlite3
+import sys
+
+db, access_key = sys.argv[1:]
+con = sqlite3.connect(db)
+cur = con.cursor()
+tables = [r[0] for r in cur.execute(
+    "SELECT name FROM sqlite_master WHERE type='table'")]
+if "" in tables:
+    cols = sorted(r[1] for r in cur.execute('PRAGMA table_info("")'))
+    if cols != ["AccessKeyID", "UserID"]:
+        cur.execute('DROP TABLE ""')
+        cur.execute(
+            'CREATE TABLE "" (AccessKeyID TEXT NOT NULL, '
+            "UserID TEXT NOT NULL, PRIMARY KEY (AccessKeyID))")
+        # Restore the key row for the user that owns an access key blob.
+        owner = cur.execute(
+            "SELECT UserID FROM 'dbstore-default_ns_user_table' "
+            "WHERE AccessKeys IS NOT NULL LIMIT 1").fetchone()
+        if owner:
+            cur.execute('INSERT OR REPLACE INTO "" (AccessKeyID, UserID) '
+                        "VALUES (?, ?)", (access_key, owner[0]))
+        con.commit()
+con.close()
+PYEOF
+fi
+
 # Create initial RGW user if it does not exist (fails silently on later runs)
 "$RGW_ADMIN" -c "$CEPH_CONF" user create \
   --uid s4admin \

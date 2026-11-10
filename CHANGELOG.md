@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-10
+
+### Fixed
+
+- **S3 credentials rejected after restart** (`InvalidAccessKeyId` on every
+  request with RGW logs repeating `failed to prepare statement for
+  Op(PrepareGetUser); Errmsg -no such column: AccessKeyID`): the RGW user
+  database's access-key join table could persist with a stale schema created
+  by an older rgw build. rgw only re-creates missing tables at startup and
+  never alters existing ones, so the broken schema survived restarts and
+  every user-by-access-key lookup failed. The container entrypoint now
+  detects and repairs the stale table (recreate with the expected columns and
+  restore the access-key row) before starting RGW; stored buckets and objects
+  are unaffected. A one-time manual recovery for already-deployed instances
+  is documented in
+  [Troubleshooting → S3 Credentials Rejected After Restart](docs/operations/troubleshooting.md#s3-credentials-rejected-after-restart-invalidaccesskeyid).
+
 ## [0.4.0] - 2026-11-09
 
 > **⚠ BREAKING CHANGE — data loss**: 0.4 uses a new storage engine
@@ -135,7 +152,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Helm quick start guide
 - Remove cloud-specific storage class references from deployment docs
 
-[Unreleased]: https://github.com/rh-aiservices-bu/s4/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/rh-aiservices-bu/s4/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/rh-aiservices-bu/s4/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/rh-aiservices-bu/s4/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/rh-aiservices-bu/s4/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/rh-aiservices-bu/s4/compare/v0.3.0...v0.3.1
