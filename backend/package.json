@@ -60,7 +60,7 @@
     "fastify": "5.12.8",
     "fastify-plugin": "^5.1.0",
     "fastify-sse-v2": "^4.2.1",
-    "http-errors": "^1.8.0",
+    "http-errors": "^2.0.1",
     "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.6",
     "js-yaml": "5.5.0",
@@ -73,7 +73,7 @@
   },
   "devDependencies": {
     "@types/form-data": "^2.5.2",
-    "@types/http-errors": "^1.8.0",
+    "@types/http-errors": "^2.0.5",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.27",
