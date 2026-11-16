@@ -61,7 +61,7 @@
     "fastify-plugin": "^5.1.0",
     "fastify-sse-v2": "^4.2.1",
     "http-errors": "^1.8.0",
-    "http-proxy-agent": "^7.0.2",
+    "http-proxy-agent": "^9.1.0",
     "https-proxy-agent": "^7.0.6",
     "js-yaml": "5.5.0",
     "jsonwebtoken": "^9.0.2",
