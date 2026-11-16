@@ -33,7 +33,7 @@ RUN npm run build
 # (EPEL is unavailable) and has no `tar`. Fetch Node.js here, in a stage that
 # has curl + tar, and copy only the resulting binary.
 # -----------------------------------------------------------------------------
-FROM registry.access.redhat.com/ubi9/ubi:9.8 AS runtime-tools
+FROM registry.access.redhat.com/ubi9/ubi:9.9 AS runtime-tools
 
 ARG NODE_VERSION=22.23.4
 
