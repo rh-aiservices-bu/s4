@@ -74,7 +74,7 @@
   "devDependencies": {
     "@types/form-data": "^2.5.2",
     "@types/http-errors": "^1.8.0",
-    "@types/jest": "^29.5.14",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.27",
     "@types/node": "^20.19.33",
@@ -87,7 +87,7 @@
     "eslint-plugin-prettier": "^5.5.7",
     "fastify-cli": "^8.0.3",
     "form-data": "^4.0.6",
-    "jest": "^29.6.1",
+    "jest": "^30.5.2",
     "memfs": "^4.80.0",
     "nodemon": "^3.0.2",
     "pino-pretty": "13.2.0",
