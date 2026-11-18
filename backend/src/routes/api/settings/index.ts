@@ -46,6 +46,14 @@ import { handleS3Error, handleError } from '../../../utils/errorHandler';
 import { HttpStatus } from '../../../utils/httpStatus';
 import { auditLogExtended, AuditEventType } from '../../../utils/auditLog';
 
+// GET /s3 sends this placeholder instead of the stored secret. The settings
+// page posts it back unchanged unless the user types a new secret, so treat it
+// as "keep the current one".
+const REDACTED_SECRET = '***REDACTED***';
+
+const resolveSecretAccessKey = (secretAccessKey: string): string =>
+  secretAccessKey === REDACTED_SECRET ? getS3Config().secretAccessKey : secretAccessKey;
+
 export default async (fastify: FastifyInstance): Promise<void> => {
   // Note: Authentication is handled by the global auth hook in app.ts
 
@@ -55,7 +63,7 @@ export default async (fastify: FastifyInstance): Promise<void> => {
     const { accessKeyId, secretAccessKey, region, endpoint, defaultBucket } = getS3Config();
     const settings = {
       accessKeyId: accessKeyId,
-      secretAccessKey: secretAccessKey ? '***REDACTED***' : '',
+      secretAccessKey: secretAccessKey ? REDACTED_SECRET : '',
       region: region,
       endpoint: endpoint,
       defaultBucket: defaultBucket,
@@ -66,7 +74,8 @@ export default async (fastify: FastifyInstance): Promise<void> => {
   // Update S3 settings
   fastify.put<{ Body: S3ConfigBody }>('/s3', { schema: updateS3ConfigSchema }, async (req, reply) => {
     logAccess(req);
-    const { accessKeyId, secretAccessKey, region, endpoint, defaultBucket } = req.body;
+    const { accessKeyId, region, endpoint, defaultBucket } = req.body;
+    const secretAccessKey = resolveSecretAccessKey(req.body.secretAccessKey);
     try {
       updateS3Config(accessKeyId, secretAccessKey, region, endpoint, defaultBucket);
 
@@ -105,7 +114,8 @@ export default async (fastify: FastifyInstance): Promise<void> => {
   // Test S3 connection
   fastify.post<{ Body: TestS3ConfigBody }>('/test-s3', { schema: testS3ConfigSchema }, async (req, reply) => {
     logAccess(req);
-    const { accessKeyId, secretAccessKey, region, endpoint } = req.body;
+    const { accessKeyId, region, endpoint } = req.body;
+    const secretAccessKey = resolveSecretAccessKey(req.body.secretAccessKey);
     try {
       const { httpProxy, httpsProxy } = getProxyConfig();
       const s3ClientOptions: any = {
