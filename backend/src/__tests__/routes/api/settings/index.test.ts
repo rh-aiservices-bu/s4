@@ -110,6 +110,28 @@ describe('Settings Routes', () => {
         );
       });
 
+      it('should keep the stored secret when the redacted placeholder is sent back', async () => {
+        const response = await fastify.inject({
+          method: 'PUT',
+          url: '/s3',
+          payload: {
+            accessKeyId: 'test-access-key',
+            secretAccessKey: '***REDACTED***',
+            region: 'us-west-2',
+            endpoint: 'https://s3.us-east-1.amazonaws.com',
+            defaultBucket: 'test-default-bucket',
+          },
+        });
+        expect(response.statusCode).toBe(200);
+        expect(configUtils.updateS3Config).toHaveBeenCalledWith(
+          'test-access-key',
+          'test-secret-key',
+          'us-west-2',
+          'https://s3.us-east-1.amazonaws.com',
+          'test-default-bucket',
+        );
+      });
+
       it('should handle errors when updating S3 settings', async () => {
         (configUtils.updateS3Config as jest.Mock).mockImplementationOnce(() => {
           throw new Error('Update failed');
@@ -151,6 +173,41 @@ describe('Settings Routes', () => {
         expect(JSON.parse(response.payload)).toEqual({
           message: 'Connection successful',
         });
+      });
+
+      it('should use the stored secret when the redacted placeholder is sent back', async () => {
+        s3Mock.on(ListBucketsCommand).resolves({});
+        const response = await fastify.inject({
+          method: 'POST',
+          url: '/test-s3',
+          payload: {
+            accessKeyId: 'test-access-key',
+            secretAccessKey: '***REDACTED***',
+            region: 'us-east-1',
+            endpoint: 'https://s3.us-east-1.amazonaws.com',
+          },
+        });
+        expect(response.statusCode).toBe(200);
+        const client = s3Mock.call(0).thisValue as S3Client;
+        const credentials = await client.config.credentials();
+        expect(credentials.secretAccessKey).toBe('test-secret-key');
+      });
+
+      it('should use a newly typed secret as is', async () => {
+        s3Mock.on(ListBucketsCommand).resolves({});
+        await fastify.inject({
+          method: 'POST',
+          url: '/test-s3',
+          payload: {
+            accessKeyId: 'test-access-key',
+            secretAccessKey: 'typed-secret',
+            region: 'us-east-1',
+            endpoint: 'https://s3.us-east-1.amazonaws.com',
+          },
+        });
+        const client = s3Mock.call(0).thisValue as S3Client;
+        const credentials = await client.config.credentials();
+        expect(credentials.secretAccessKey).toBe('typed-secret');
       });
 
       it('should handle S3ServiceException during connection test', async () => {
