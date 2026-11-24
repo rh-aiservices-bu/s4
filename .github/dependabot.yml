@@ -22,7 +22,6 @@ updates:
     groups:
       root-all:
         patterns: ['*']
-        update-types: ['version-update:semver-major', 'version-update:semver-minor', 'version-update:semver-patch']
   # Backend API
   - package-ecosystem: npm
     directory: "/backend"
@@ -33,7 +32,6 @@ updates:
     groups:
       backend-all:
         patterns: ['*']
-        update-types: ['version-update:semver-major', 'version-update:semver-minor', 'version-update:semver-patch']
 
   # Frontend web UI
   - package-ecosystem: npm
@@ -46,7 +44,6 @@ updates:
     groups:
       frontend-all:
         patterns: ['*']
-        update-types: ['version-update:semver-major', 'version-update:semver-minor', 'version-update:semver-patch']
 
   # Container base images (RGW base, UBI builder/tooling stages)
   - package-ecosystem: docker
@@ -68,4 +65,3 @@ updates:
     groups:
       actions-all:
         patterns: ['*']
-        update-types: ['version-update:semver-major', 'version-update:semver-minor', 'version-update:semver-patch']
