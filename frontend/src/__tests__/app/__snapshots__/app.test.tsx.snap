@@ -10,7 +10,7 @@ exports[`App tests should render default App component 1`] = `
     >
       <a
         class="pf-v6-c-button pf-m-primary"
-        data-ouia-component-id="OUIA-Generated-Button-primary-:r0:"
+        data-ouia-component-id="OUIA-Generated-Button-primary-_r_0_"
         data-ouia-component-type="PF6/Button"
         data-ouia-safe="true"
         href="#primary-app-container"
@@ -37,7 +37,7 @@ exports[`App tests should render default App component 1`] = `
             aria-expanded="true"
             aria-label="Dashboard navigation"
             class="pf-v6-c-button pf-m-plain"
-            data-ouia-component-id="OUIA-Generated-Button-plain-:r1:"
+            data-ouia-component-id="OUIA-Generated-Button-plain-_r_1_"
             data-ouia-component-type="PF6/Button"
             data-ouia-safe="true"
             id="page-nav-toggle"
@@ -93,7 +93,7 @@ exports[`App tests should render default App component 1`] = `
               />
               <h2
                 class="pf-v6-c-content--h2 title-text pf-u-margin-left-md"
-                data-ouia-component-id="OUIA-Generated-Content-:r2:"
+                data-ouia-component-id="OUIA-Generated-Content-_r_2_"
                 data-ouia-component-type="PF6/Content"
                 data-ouia-safe="true"
                 data-pf-content="true"
@@ -117,10 +117,10 @@ exports[`App tests should render default App component 1`] = `
       >
         <div
           class="pf-v6-c-toolbar pf-m-full-height"
-          data-ouia-component-id="OUIA-Generated-Toolbar-:r4:"
+          data-ouia-component-id="OUIA-Generated-Toolbar-_r_4_"
           data-ouia-component-type="PF6/Toolbar"
           data-ouia-safe="true"
-          id="pf-random-id-:r3:"
+          id="pf-random-id-_r_3_"
         >
           <div
             class="pf-v6-c-toolbar__content"
@@ -204,7 +204,7 @@ exports[`App tests should render default App component 1`] = `
                     aria-expanded="false"
                     aria-haspopup="menu"
                     class="pf-v6-c-menu-toggle"
-                    data-ouia-component-id="OUIA-Generated-MenuToggle-:r8:"
+                    data-ouia-component-id="OUIA-Generated-MenuToggle-_r_8_"
                     data-ouia-component-type="PF6/MenuToggle"
                     data-ouia-safe="true"
                     type="button"
@@ -244,7 +244,7 @@ exports[`App tests should render default App component 1`] = `
                     aria-expanded="false"
                     aria-label="Notifications"
                     class="pf-v6-c-button pf-m-stateful pf-m-read"
-                    data-ouia-component-id="OUIA-Generated-Button-stateful-:r9:"
+                    data-ouia-component-id="OUIA-Generated-Button-stateful-_r_9_"
                     data-ouia-component-type="PF6/Button"
                     data-ouia-safe="true"
                     type="button"
@@ -277,7 +277,7 @@ exports[`App tests should render default App component 1`] = `
                     <button
                       aria-label="Help"
                       class="pf-v6-c-button pf-m-plain"
-                      data-ouia-component-id="OUIA-Generated-Button-plain-:rc:"
+                      data-ouia-component-id="OUIA-Generated-Button-plain-_r_c_"
                       data-ouia-component-type="PF6/Button"
                       data-ouia-safe="true"
                       type="button"
@@ -342,7 +342,7 @@ exports[`App tests should render default App component 1`] = `
           <nav
             aria-label="Global"
             class="pf-v6-c-nav"
-            data-ouia-component-id="OUIA-Generated-Nav-:re:"
+            data-ouia-component-id="OUIA-Generated-Nav-_r_e_"
             data-ouia-component-type="PF6/Nav"
             data-ouia-safe="true"
             id="nav-first-simple"
@@ -354,7 +354,7 @@ exports[`App tests should render default App component 1`] = `
             >
               <li
                 class="pf-v6-c-nav__item pf-m-expanded"
-                data-ouia-component-id="OUIA-Generated-NavExpandable-:rg:"
+                data-ouia-component-id="OUIA-Generated-NavExpandable-_r_g_"
                 data-ouia-component-type="PF6/NavExpandable"
                 data-ouia-safe="true"
               >
@@ -400,7 +400,7 @@ exports[`App tests should render default App component 1`] = `
                   >
                     <li
                       class="pf-v6-c-nav__item navitem-flex"
-                      data-ouia-component-id="OUIA-Generated-NavItem-:rh:"
+                      data-ouia-component-id="OUIA-Generated-NavItem-_r_h_"
                       data-ouia-component-type="PF6/NavItem"
                       data-ouia-safe="true"
                     >
@@ -414,7 +414,7 @@ exports[`App tests should render default App component 1`] = `
                     </li>
                     <li
                       class="pf-v6-c-nav__item navitem-flex"
-                      data-ouia-component-id="OUIA-Generated-NavItem-:ri:"
+                      data-ouia-component-id="OUIA-Generated-NavItem-_r_i_"
                       data-ouia-component-type="PF6/NavItem"
                       data-ouia-safe="true"
                     >
@@ -431,7 +431,7 @@ exports[`App tests should render default App component 1`] = `
               </li>
               <li
                 class="pf-v6-c-nav__item navitem-flex"
-                data-ouia-component-id="OUIA-Generated-NavItem-:rj:"
+                data-ouia-component-id="OUIA-Generated-NavItem-_r_j_"
                 data-ouia-component-type="PF6/NavItem"
                 data-ouia-safe="true"
               >
@@ -451,7 +451,7 @@ exports[`App tests should render default App component 1`] = `
           >
             <small
               class="pf-v6-c-content--small"
-              data-ouia-component-id="OUIA-Generated-Content-:rk:"
+              data-ouia-component-id="OUIA-Generated-Content-_r_k_"
               data-ouia-component-type="PF6/Content"
               data-ouia-safe="true"
               data-pf-content="true"
@@ -479,7 +479,7 @@ exports[`App tests should render default App component 1`] = `
                     <div>
                       <a
                         class="pf-v6-c-content--a footer-github-link"
-                        data-ouia-component-id="OUIA-Generated-Content-:rl:"
+                        data-ouia-component-id="OUIA-Generated-Content-_r_l_"
                         data-ouia-component-type="PF6/Content"
                         data-ouia-safe="true"
                         data-pf-content="true"
@@ -543,7 +543,7 @@ exports[`App tests should render default App component 1`] = `
     >
       <div
         class="pf-v6-c-drawer"
-        data-ouia-component-id="OUIA-Generated-Drawer-:rm:"
+        data-ouia-component-id="OUIA-Generated-Drawer-_r_m_"
         data-ouia-component-type="PF6/Drawer"
         data-ouia-safe="true"
       >
@@ -566,7 +566,7 @@ exports[`App tests should render default App component 1`] = `
           <div
             class="pf-v6-c-drawer__panel"
             hidden=""
-            id="pf-drawer-panel-:rn:"
+            id="pf-drawer-panel-_r_n_"
             inert=""
           />
         </div>

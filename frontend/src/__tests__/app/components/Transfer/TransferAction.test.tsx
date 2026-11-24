@@ -109,6 +109,11 @@ describe('TransferAction', () => {
 
     // Select destination
     const select = screen.getByRole('combobox');
+    // Locations load asynchronously; React 19 no longer flushes the update
+    // before the interaction, so wait for the options to exist.
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(1);
+    });
     await user.selectOptions(select, 'local-0');
 
     // Wait for button to be enabled
@@ -148,6 +153,11 @@ describe('TransferAction', () => {
     });
 
     const select = screen.getByRole('combobox');
+    // Locations load asynchronously; React 19 no longer flushes the update
+    // before the interaction, so wait for the options to exist.
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(1);
+    });
     await user.selectOptions(select, 'local-0');
 
     // Wait for button to be enabled
@@ -184,6 +194,11 @@ describe('TransferAction', () => {
     });
 
     const select = screen.getByRole('combobox');
+    // Locations load asynchronously; React 19 no longer flushes the update
+    // before the interaction, so wait for the options to exist.
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(1);
+    });
     await user.selectOptions(select, 'local-0');
 
     // Wait for button to be enabled
@@ -219,6 +234,11 @@ describe('TransferAction', () => {
     });
 
     const select = screen.getByRole('combobox');
+    // Locations load asynchronously; React 19 no longer flushes the update
+    // before the interaction, so wait for the options to exist.
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(1);
+    });
     await user.selectOptions(select, 'local-0');
 
     // Wait for the location to be selected and button to be enabled
@@ -268,6 +288,11 @@ describe('TransferAction', () => {
     });
 
     const select = screen.getByRole('combobox');
+    // Locations load asynchronously; React 19 no longer flushes the update
+    // before the interaction, so wait for the options to exist.
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(1);
+    });
     await user.selectOptions(select, 'local-0');
 
     // Wait for button to be enabled
@@ -354,6 +379,11 @@ describe('TransferAction', () => {
     });
 
     const select = screen.getByRole('combobox');
+    // Locations load asynchronously; React 19 no longer flushes the update
+    // before the interaction, so wait for the options to exist.
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(1);
+    });
     await user.selectOptions(select, 'local-0');
 
     // Wait for button to be enabled
