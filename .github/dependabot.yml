@@ -10,6 +10,10 @@ version: 2
 # releases. `dev` must stay in sync with `main` because Dependabot scans the
 # manifests on the target branch. Security-update PRs are NOT affected by
 # `target-branch` and always target `main`.
+#
+# npm groups cover minor and patch updates only. Majors arrive as individual
+# PRs: grouping them produced unmergeable PRs (React 19 next to jest 30 next to
+# an eslint major) that no reviewer could split and no CI run could pass.
 updates:
   # Root workspace (build/dev tooling for both apps)
   - package-ecosystem: npm
@@ -20,8 +24,9 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     groups:
-      root-all:
+      root-minor-patch:
         patterns: ['*']
+        update-types: ['minor', 'patch']
   # Backend API
   - package-ecosystem: npm
     directory: "/backend"
@@ -30,10 +35,10 @@ updates:
       interval: weekly
       day: monday
     groups:
-      backend-all:
+      backend-minor-patch:
         patterns: ['*']
-    # Majors that need a migration before they can be bumped; without this they
-    # are folded into the weekly group and the PR fails to install.
+        update-types: ['minor', 'patch']
+    # Majors that cannot install yet, even on their own.
     ignore:
       # eslint 10 removed .eslintrc support; needs a flat-config migration.
       - dependency-name: eslint
@@ -58,8 +63,9 @@ updates:
       day: monday
     open-pull-requests-limit: 10
     groups:
-      frontend-all:
+      frontend-minor-patch:
         patterns: ['*']
+        update-types: ['minor', 'patch']
     # Same migrations as /backend: .eslintrc.js and the typescript-eslint peer
     # range block the eslint 10 and typescript 7 majors.
     ignore:
