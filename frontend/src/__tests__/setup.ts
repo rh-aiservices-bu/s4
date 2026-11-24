@@ -63,6 +63,24 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// jsdom performs no layout, so every element reports clientWidth/clientHeight 0.
+// PatternFly 6.7 derives the Page breakpoint (and therefore the mobile drawer
+// layout) from the container size; without these the whole app renders in
+// mobile mode and the page content is aria-hidden behind a backdrop.
+Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+  configurable: true,
+  get() {
+    return 1200;
+  },
+});
+
+Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+  configurable: true,
+  get() {
+    return 900;
+  },
+});
+
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
   constructor() {}
