@@ -20,7 +20,7 @@ const RedirectWithPrefix: React.FC<{ to: string }> = ({ to }) => {
 
 export interface IAppRoute {
   label?: string; // Excluding the label will exclude the route from the nav sidebar in AppLayout
-  element: JSX.Element;
+  element: React.JSX.Element;
   path: string;
   navPath?: string; // Optional navigation path for routes with parameters (uses path if not specified)
   title: string;

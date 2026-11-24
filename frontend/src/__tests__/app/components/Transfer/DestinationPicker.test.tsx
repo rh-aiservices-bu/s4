@@ -70,6 +70,11 @@ describe('DestinationPicker', () => {
     });
 
     const select = screen.getByRole('combobox');
+    // Locations load asynchronously; React 19 no longer flushes the update
+    // before the interaction, so wait for the options to exist.
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(1);
+    });
     expect(select).toBeInTheDocument();
   });
 
@@ -91,6 +96,11 @@ describe('DestinationPicker', () => {
 
     // Select a location
     const select = screen.getByRole('combobox');
+    // Locations load asynchronously; React 19 no longer flushes the update
+    // before the interaction, so wait for the options to exist.
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(1);
+    });
     await user.selectOptions(select, 'bucket1');
 
     await waitFor(() => {
@@ -112,6 +122,11 @@ describe('DestinationPicker', () => {
     });
 
     const select = screen.getByRole('combobox');
+    // Locations load asynchronously; React 19 no longer flushes the update
+    // before the interaction, so wait for the options to exist.
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(1);
+    });
     await user.selectOptions(select, 'bucket1');
 
     await waitFor(() => {
@@ -149,6 +164,11 @@ describe('DestinationPicker', () => {
     });
 
     const select = screen.getByRole('combobox');
+    // Locations load asynchronously; React 19 no longer flushes the update
+    // before the interaction, so wait for the options to exist.
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(1);
+    });
     await user.selectOptions(select, 'bucket1');
 
     await waitFor(() => {
@@ -181,6 +201,11 @@ describe('DestinationPicker', () => {
     });
 
     const select = screen.getByRole('combobox');
+    // Locations load asynchronously; React 19 no longer flushes the update
+    // before the interaction, so wait for the options to exist.
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(1);
+    });
     await user.selectOptions(select, 'bucket1');
 
     await waitFor(() => {
@@ -221,6 +246,11 @@ describe('DestinationPicker', () => {
     });
 
     const select = screen.getByRole('combobox');
+    // Locations load asynchronously; React 19 no longer flushes the update
+    // before the interaction, so wait for the options to exist.
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(1);
+    });
     await user.selectOptions(select, 'bucket1');
 
     // Wait for button to be enabled
