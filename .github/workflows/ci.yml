@@ -1,10 +1,11 @@
 name: CI
 
-# Runs the full test/lint suite on pull requests targeting main.
+# Runs the full test/lint suite on pull requests targeting main or the dev
+# integration branch.
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 permissions:
   contents: read
