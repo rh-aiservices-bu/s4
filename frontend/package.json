@@ -104,7 +104,7 @@
     "react-router": "^7.18.5",
     "react-router-dom": "^7.18.5",
     "sirv-cli": "^3.0.1",
-    "uuid": "^13.0.2"
+    "uuid": "^14.0.3"
   },
   "overrides": {
     "dompurify": "^3.4.17",
