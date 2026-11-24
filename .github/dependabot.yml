@@ -32,6 +32,22 @@ updates:
     groups:
       backend-all:
         patterns: ['*']
+    # Majors that need a migration before they can be bumped; without this they
+    # are folded into the weekly group and the PR fails to install.
+    ignore:
+      # eslint 10 removed .eslintrc support; needs a flat-config migration.
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
+      # @typescript-eslint 8.x peers require typescript <6.1.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      # ESM-only; the backend compiles to CommonJS.
+      - dependency-name: p-limit
+        update-types: ['version-update:semver-major']
+      - dependency-name: http-proxy-agent
+        update-types: ['version-update:semver-major']
+      - dependency-name: https-proxy-agent
+        update-types: ['version-update:semver-major']
 
   # Frontend web UI
   - package-ecosystem: npm
@@ -44,6 +60,13 @@ updates:
     groups:
       frontend-all:
         patterns: ['*']
+    # Same migrations as /backend: .eslintrc.js and the typescript-eslint peer
+    # range block the eslint 10 and typescript 7 majors.
+    ignore:
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
 
   # Container base images (RGW base, UBI builder/tooling stages)
   - package-ecosystem: docker
