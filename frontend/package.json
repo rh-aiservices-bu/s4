@@ -100,7 +100,7 @@
     "p-limit": "^7.3.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-i18next": "^14.1.1",
+    "react-i18next": "^18.0.3",
     "react-router": "^7.18.5",
     "react-router-dom": "^7.18.5",
     "sirv-cli": "^3.0.1",
