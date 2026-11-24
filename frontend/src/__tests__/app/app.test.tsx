@@ -73,8 +73,9 @@ describe('App tests', () => {
     jest.clearAllMocks();
 
     // Mock the auth/info endpoint to return auth disabled (so app renders immediately)
+    // and an already-accepted disclaimer, so no modal steals focus/aria-hidden.
     mockedApiClient.get.mockResolvedValue({
-      data: { authMode: 'none', authRequired: false },
+      data: { authMode: 'none', authRequired: false, disclaimer: { status: 'accepted' } },
     } as never);
 
     // Reset fetch mock
