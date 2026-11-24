@@ -4,10 +4,17 @@ version: 2
 # Security updates are opened independently of this file (see
 # docs/security/vulnerability-management.md); this configuration makes sure
 # routine minor/patch bumps also arrive as PRs instead of going stale silently.
+#
+# Version-update PRs target `dev`, the integration branch; `dev` is merged into
+# `main` (the default branch, which is where Dependabot reads this file) for
+# releases. `dev` must stay in sync with `main` because Dependabot scans the
+# manifests on the target branch. Security-update PRs are NOT affected by
+# `target-branch` and always target `main`.
 updates:
   # Root workspace (build/dev tooling for both apps)
   - package-ecosystem: npm
     directory: "/"
+    target-branch: dev
     schedule:
       interval: weekly
       day: monday
@@ -19,6 +26,7 @@ updates:
   # Backend API
   - package-ecosystem: npm
     directory: "/backend"
+    target-branch: dev
     schedule:
       interval: weekly
       day: monday
@@ -30,6 +38,7 @@ updates:
   # Frontend web UI
   - package-ecosystem: npm
     directory: "/frontend"
+    target-branch: dev
     schedule:
       interval: weekly
       day: monday
@@ -42,6 +51,7 @@ updates:
   # Container base images (RGW base, UBI builder/tooling stages)
   - package-ecosystem: docker
     directory: "/docker"
+    target-branch: dev
     schedule:
       interval: weekly
       day: monday
@@ -50,6 +60,7 @@ updates:
   # GitHub Actions used by CI
   - package-ecosystem: github-actions
     directory: "/"
+    target-branch: dev
     schedule:
       interval: weekly
       day: monday
