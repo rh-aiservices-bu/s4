@@ -8,6 +8,7 @@ Operations documentation for monitoring, troubleshooting, and managing S4 in pro
 - **[Upgrading to 0.4](migration-0.4.md)** - Breaking-change migration from 0.3.x to 0.4+ (base image, data reset)
 - **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
 - **[Error Reference](error-reference.md)** - Complete error message reference with causes and resolutions
+- **[RHAI-51168: RGW Image Comparison](rhai-51168-ceph-image-comparison.md)** - Ceph 20.2.2 stable base vs the Ceph 22 dev long-key test build (RHAI-51168)
 - **[FAQ](faq.md)** - Frequently asked questions
 
 ## Quick Operations Tasks
